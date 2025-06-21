@@ -25,10 +25,12 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized,no token' })
   }
 }
-const authorize = (...roles) => {
+const authorize = (roles) => { 
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: `Forbidden: User role '${req.user ? req.user.role : 'unknown'}' is not authorized for resources` });
+    const userRole = req.user ? req.user.role : null;
+    const trimmedUserRole = userRole ? userRole.trim() : null;
+    if (!req.user || !trimmedUserRole || !roles.includes(trimmedUserRole)) {
+      return res.status(403).json({ message: `Forbidden: User role '${userRole || 'unknown'}' is not authorized for this resource.` });
     }
     next();
   };

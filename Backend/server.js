@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const { globalErrorHandler } = require('./middleware/errorMiddleware'); 
 dotenv.config();
 const app = express();
 connectDB();
@@ -18,6 +19,9 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/problems', require('./routes/problemRoutes')); 
+app.use(globalErrorHandler);
+
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`server started on port ${PORT}`);

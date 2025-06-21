@@ -35,7 +35,7 @@ exports.signup = async (req, res, next) => {
       password,
       UserName,
       dob,
-      role: role || 'user', 
+      role: role ? role.trim() : 'user', 
     })
 
     await newUser.save()

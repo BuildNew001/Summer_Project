@@ -49,169 +49,85 @@ const SignupPage = () => {
   });
 
   const onSubmit = async (values) => {
-  
     try {
-      setIsSigningUp(true); // Show loading spinner
-      // The actual backend API call (e.g., using fetch or axios) happens inside the register function in AuthContext.
-      // It should send a POST request to your backend's signup endpoint (e.g., /api/auth/signup).
+      setIsSigningUp(true);
       await register(values);
-      // Navigation and success toasts are handled by the register function in AuthContext on success
     } catch (error) {
-      // Error toasts are handled by the register function in AuthContext
-      debugSignup("Signup page error:", error);    }
-    finally{
+      debugSignup("Signup page error:", error);
+    } finally {
       setIsSigningUp(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Create an Account</h1>
-            <p className="text-gray-600">Join us to get Started</p>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-tr from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12 animate-fade-in">
+      <div className="w-full max-w-lg">
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/20">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-extrabold text-white mb-2">Create an Account</h1>
+            <p className="text-slate-300">Join the Online Judge community</p>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="fullname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Enter Your Name" 
-                        {...field} 
-                        disabled={isSigningUp}
-                        className="focus:ring-[#F08080]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="UserName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Enter Your Name" 
-                        {...field} 
-                        disabled={isSigningUp}
-                        className="focus:ring-[#F08080]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="mobileNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="1234567890" 
-                        type="tel" 
-                        {...field} 
-                        disabled={isSigningUp}
-                        className="focus:ring-[#F08080]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="youremail@example.com" 
-                        type="email" 
-                        {...field} 
-                        disabled={isSigningUp}
-                        className="focus:ring-[#F08080]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="••••••••" 
-                        type="password" 
-                        {...field} 
-                        disabled={isSigningUp}
-                        className="focus:ring-[#F08080]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {['fullname', 'UserName', 'mobileNumber', 'email', 'password'].map((name, index) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white font-medium">
+                        {name === 'UserName' ? 'Username' : name === 'mobileNumber' ? 'Mobile Number' : name.charAt(0).toUpperCase() + name.slice(1)}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type={name === 'password' ? 'password' : name === 'email' ? 'email' : name === 'mobileNumber' ? 'tel' : 'text'}
+                          placeholder={name === 'UserName' ? 'coolcoder123' : name === 'email' ? 'you@example.com' : ''}
+                          {...field}
+                          disabled={isSigningUp}
+                          className="bg-white/20 border border-white/30 text-white placeholder:text-slate-400 focus:ring-[#F08080]"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+              ))}
 
               <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>I am a...</FormLabel>
+                    <FormLabel className="text-white font-medium">Select Role</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        className="flex flex-col space-y-1"
+                        className="flex flex-col gap-2"
                         disabled={isSigningUp}
                       >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="user" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                            Coder / Participant
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="admin" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">
-                             Administrator (Requires Approval)
-                          </FormLabel> {/* Consider adding a note that admin requires backend approval */}
-                        </FormItem>
+                        {['user', 'admin'].map(role => (
+                          <FormItem key={role} className="flex items-center space-x-3">
+                            <FormControl>
+                              <RadioGroupItem value={role} />
+                            </FormControl>
+                            <FormLabel className="text-white font-normal cursor-pointer">
+                              {role === 'user' ? 'Coder / Participant' : 'Administrator (Approval Needed)'}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
                       </RadioGroup>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
 
-              <Button 
-                type="submit" 
-                className="w-full bg-[#F08080] hover:bg-[#e57373] text-white transition-colors"
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#F08080] to-[#e57373] text-white font-bold hover:opacity-90 py-3 rounded-xl shadow-lg"
                 disabled={isSigningUp}
               >
                 {isSigningUp ? (
@@ -227,11 +143,11 @@ const SignupPage = () => {
           </Form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white/70">
               Already have an account?{' '}
-              <Link 
-                to="/login" 
-                className="text-[#F08080] hover:underline font-medium transition-colors"
+              <Link
+                to="/login"
+                className="text-[#F08080] hover:underline font-semibold"
               >
                 Login
               </Link>

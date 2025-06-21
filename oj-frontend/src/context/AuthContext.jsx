@@ -9,9 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // To track initial auth check
   const navigate = useNavigate();
-  const BASE_URL = 'http://localhost:5000'; // Replace with your actual backend URL
-
-  // Function to check if user is already authenticated (e.g., on app load)
+  const BASE_URL = 'http://localhost:5000';
   const checkAuth = async () => {
     try {
       setLoading(true);
