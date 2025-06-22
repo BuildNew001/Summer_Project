@@ -44,8 +44,13 @@ const ProblemSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    isFeatured: {
+    type: Boolean,
+    default: false,
+    index: true, 
   },
-  { timestamps: true } // Automatically adds createdAt and updatedAt
+  },
+  { timestamps: true } 
 );
 
 const Problem = mongoose.model("Problem", ProblemSchema);

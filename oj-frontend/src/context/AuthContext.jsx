@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      // API call to your backend's registration endpoint
       const { data } = await axios.post(`${BASE_URL}/api/auth/signup`, userData, {
         withCredentials: true,
       });

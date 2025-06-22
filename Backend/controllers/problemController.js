@@ -58,17 +58,16 @@ exports.getProblemById = async (req, res, next) => {
 
 exports.updateProblem = async (req, res, next) => {
     try {
-        let problem = await Problem.findById(req.params.id);
+        const problem = await Problem.findById(req.params.id);
         if (!problem) {
             return res.status(404).json({ success: false, message: 'Problem not found' });
         }
         if (problem.author.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'User not authorized to update this problem' });
         }
-        problem = await Problem.findByIdAndUpdate(req.params.id, req.body, {
-            new: true, 
-            runValidators: true 
-        });
+        Object.assign(problem, req.body);
+        await problem.save();
+
         res.status(200).json({
             success: true,
             data: problem
@@ -95,6 +94,24 @@ exports.deleteProblem = async (req, res, next) => {
         res.status(200).json({
             success: true,
             data: {} 
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getFeaturedProblems = async (req, res, next) => {
+    try {
+        const limit = parseInt(req.query.limit, 10) || 3;
+        const problems = await Problem.find({ isFeatured: true })
+            .sort({ createdAt: -1 }) 
+            .populate('author', 'UserName fullname')
+            .limit(limit);
+
+       res.status(200).json({
+            success: true,
+            count: problems.length,
+            data: problems
         });
     } catch (err) {
         next(err);

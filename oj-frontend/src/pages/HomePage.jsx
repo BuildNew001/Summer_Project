@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Code, Trophy, BookOpen } from 'lucide-react';
-
+import { fetchFeaturedProblems } from '../context/problemfetch';
 const DEFAULT_OJ_LOGO_URL = '/logo-normal.png';
 const HOVER_OJ_LOGO_URL = '/logo-hover.png';
 
@@ -10,29 +10,25 @@ const Home = () => {
   const [featuredProblems, setFeaturedProblems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [ojLogo, setOjLogo] = useState(DEFAULT_OJ_LOGO_URL);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    const fetchProblems = async () => {
+     const getFeaturedProblems = async () => {
       try {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const mockData = [
-          { id: 1, title: 'Two Sum Challenge', difficulty: 'Easy', link: '/problems/1' },
-          { id: 2, title: 'Binary Tree Traversal', difficulty: 'Medium', link: '/problems/2' },
-          { id: 3, title: 'Shortest Path Algorithm', difficulty: 'Hard', link: '/problems/3' }
-        ];
-        setFeaturedProblems(mockData);
         setError(null);
+        const problems = await fetchFeaturedProblems(3);
+        const formattedProblems = problems.map(p => ({ ...p, link: `/problems/${p._id}` }));
+        setFeaturedProblems(formattedProblems);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Failed to fetch featured problems.');
         setFeaturedProblems([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProblems();
+    getFeaturedProblems();
   }, []);
 
   return (
@@ -41,14 +37,25 @@ const Home = () => {
         <div className="backdrop-blur-md bg-black/60 py-16 px-10 rounded-3xl w-[95%] md:w-[80%] mx-auto shadow-2xl animate-fade-in border border-white/10">
           <div
             className="inline-flex flex-col sm:flex-row items-center justify-center gap-6 cursor-pointer group"
-            onMouseEnter={() => setOjLogo(HOVER_OJ_LOGO_URL)}
-            onMouseLeave={() => setOjLogo(DEFAULT_OJ_LOGO_URL)}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
           >
-            <img
-              src={ojLogo}
-              alt="Online Judge Logo"
-              className="h-24 w-24 transition-transform duration-700 group-hover:rotate-[20deg] group-hover:scale-125 drop-shadow-xl"
-            />
+            <div className="relative h-24 w-24">
+              <img
+                src={DEFAULT_OJ_LOGO_URL}
+                alt="Default Logo"
+                className={`absolute inset-0 h-full w-full transition-opacity duration-500 object-contain ${
+                  isHovering ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+              <img
+                src={HOVER_OJ_LOGO_URL}
+                alt="Hover Logo"
+                className={`absolute inset-0 h-full w-full transition-opacity duration-500 object-contain ${
+                  isHovering ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </div>
             <h1 className="text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-pink-400 via-indigo-400 to-cyan-400 animate-gradient bg-[200%_auto]">
               Online Judge
             </h1>
@@ -90,7 +97,7 @@ const Home = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProblems.map(problem => (
                 <div
-                  key={problem.id}
+                  key={problem._id}
                   className="bg-gradient-to-br from-[#1f2937] to-[#111827] border border-white/10 p-6 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all group hover:scale-105 hover:bg-opacity-90"
                 >
                   <div className="flex items-center mb-4">

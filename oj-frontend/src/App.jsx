@@ -5,7 +5,8 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Layout from "./layout/layout";
 import { Toaster } from "sonner";
-
+import ProblemsPage from "./pages/ProblemsPage";
+import ProblemDetailPage from "./pages/ProblemDetailPage";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./context/AuthContext";
 const App = () => {
@@ -14,9 +15,6 @@ const App = () => {
   useEffect(() => {
     checkAuth();
   }, []);
-
-
-  const ProblemsPage = () => <div>Problems Page (TODO)</div>;
   const ContestsPage = () => <div>Contests Page (TODO)</div>;
   const ProfilePage = () => <div>Profile Page (TODO)</div>;
   const MySubmissionsPage = () => <div>My Submissions Page (TODO)</div>;
@@ -43,6 +41,7 @@ const App = () => {
             element={!authUser ? <SignupPage /> : <Navigate to="/" />}
           />
            <Route path="/problems" element={<ProblemsPage />} />
+           <Route path="/problems/:id" element={<ProblemDetailPage />} />
           <Route path="/contests" element={<ContestsPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
@@ -56,5 +55,4 @@ const App = () => {
     </>
   );
 };
-
 export default App;
