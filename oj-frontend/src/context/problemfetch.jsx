@@ -47,3 +47,16 @@ export const submitCode = async ({ problemId, language, code }) => {
     throw error.response?.data || new Error('Server error')
   }
 }
+
+export const runCode = async (language, code) => {
+  try {
+    const response = await api.post('/run', {
+      language,
+      code
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error running code:', error)
+    throw error.response?.data || new Error('Server error')
+  }
+}

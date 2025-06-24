@@ -15,6 +15,21 @@ const generateToken = user => {
   )
 }
 
+const sendTokenResponse = (user, statusCode, res) => {
+  const token = generateToken(user);
+
+  const options = {
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), 
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: 'lax', 
+  };
+
+  res.status(statusCode).cookie('token', token, options).json({
+    id: user._id, Username: user.UserName, role: user.role
+  });
+};
+
 exports.signup = async (req, res, next) => { 
   const { fullname, email, password, UserName, dob, role } = req.body
 
@@ -40,16 +55,7 @@ exports.signup = async (req, res, next) => {
 
     await newUser.save()
 
-    const token = generateToken(newUser)
-
-    res.status(201).json({
-      token,
-      user: {
-        id: newUser._id, 
-        Username: newUser.UserName,
-        role: newUser.role
-      }
-    })
+    sendTokenResponse(newUser, 201, res);
   } catch (err) {
     next(err) 
   }
@@ -71,16 +77,28 @@ exports.login = async (req, res, next) => {
     if (!isMatchPassword) {
       return res.status(401).json({ message: 'Invalid credentials' })
     }
-    const token = generateToken(userCredential)
-    res.status(200).json({
-      token,
-      user: {
-        id: userCredential._id,
-        Username: userCredential.UserName,
-        role: userCredential.role
-      }
-    })
+    sendTokenResponse(userCredential, 200, res);
   } catch (err) {
     next(err) 
   }
 }
+
+exports.logout = (req, res, next) => {
+  res.cookie('token', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'User logged out successfully'
+  });
+};
+
+// @desc    Get current logged-in user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = (req, res, next) => {
+  // The 'protect' middleware has already attached the user to the request object
+  res.status(200).json(req.user);
+};

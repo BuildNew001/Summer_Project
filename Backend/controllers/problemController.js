@@ -1,119 +1,83 @@
 const Problem = require('../models/problems'); 
-const User = require('../models/user');
-exports.createProblem = async (req, res, next) => {
-    try {
-        const { title, description, inputFormat, outputFormat, constraints, sampleTestCases, tags, difficulty } = req.body;
-        const author = req.user.id;
-        const problem = await Problem.create({
-            title,
-            description,
-            inputFormat,
-            outputFormat,
-            constraints,
-            sampleTestCases,
-            tags,
-            difficulty,
-            author
-        });
-        res.status(201).json({
-            success: true,
-            data: problem
-        });
-    } catch (err) {
-        if (err.code === 11000) { 
-            return res.status(400).json({ success: false, message: 'Problem title already exists.' });
-        }
-        next(err);
-    }
-};
-exports.getAllProblems = async (req, res, next) => {
-    try {
-        const problems = await Problem.find().populate('author', 'UserName fullname'); 
-        res.status(200).json({
-            success: true,
-            count: problems.length,
-            data: problems
-        });
-    } catch (err) {
-        next(err);
-    }
-};
-exports.getProblemById = async (req, res, next) => {
-    try {
-        const problem = await Problem.findById(req.params.id).populate('author', 'UserName fullname');
-        if (!problem) {
-            return res.status(404).json({ success: false, message: 'Problem not found' });
-        }
-        res.status(200).json({
-            success: true,
-            data: problem
-        });
-    } catch (err) {
-        if (err.name === 'CastError') {
-             return res.status(400).json({ success: false, message: 'Invalid problem ID format' });
-        }
-        next(err);
-    }
-};
+const asyncHandler = require('express-async-handler');
 
-exports.updateProblem = async (req, res, next) => {
-    try {
-        const problem = await Problem.findById(req.params.id);
-        if (!problem) {
-            return res.status(404).json({ success: false, message: 'Problem not found' });
-        }
-        if (problem.author.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, message: 'User not authorized to update this problem' });
-        }
-        Object.assign(problem, req.body);
-        await problem.save();
+exports.createProblem = asyncHandler(async (req, res) => {
+    const { title, description, inputFormat, outputFormat, constraints, sampleTestCases, tags, difficulty } = req.body;
+    const author = req.user.id;
 
-        res.status(200).json({
-            success: true,
-            data: problem
-        });
-    } catch (err) {
-        if (err.code === 11000) {
-             return res.status(400).json({ success: false, message: 'Problem title may already exist.' });
-        }
-        next(err);
+    const problemExists = await Problem.findOne({ title });
+    if (problemExists) {
+        res.status(400);
+        throw new Error('Problem with this title already exists.');
     }
-};
 
-exports.deleteProblem = async (req, res, next) => {
-    try {
-        const problem = await Problem.findById(req.params.id);
+    const problem = await Problem.create({
+        title, description, inputFormat, outputFormat, constraints, sampleTestCases, tags, difficulty, author
+    });
 
-        if (!problem) {
-            return res.status(404).json({ success: false, message: 'Problem not found' });
-        }
-        if (problem.author.toString() !== req.user.id && req.user.role !== 'admin' ) {
-            return res.status(403).json({ success: false, message: 'User not authorized to delete this problem' });
-        }        
-        await problem.deleteOne();
-        res.status(200).json({
-            success: true,
-            data: {} 
-        });
-    } catch (err) {
-        next(err);
+    res.status(201).json({
+        success: true,
+        data: problem
+    });
+});
+
+exports.getAllProblems = asyncHandler(async (req, res) => {
+    const problems = await Problem.find().populate('author', 'UserName fullname'); 
+    res.status(200).json({
+        success: true,
+        count: problems.length,
+        data: problems
+    });
+});
+
+exports.getProblemById = asyncHandler(async (req, res) => {
+    const problem = await Problem.findById(req.params.id).populate('author', 'UserName fullname');
+    if (!problem) {
+        res.status(404);
+        throw new Error('Problem not found');
     }
-};
+    res.status(200).json({
+        success: true,
+        data: problem
+    });
+});
 
-exports.getFeaturedProblems = async (req, res, next) => {
-    try {
-        const limit = parseInt(req.query.limit, 10) || 3;
-        const problems = await Problem.find({ isFeatured: true })
-            .sort({ createdAt: -1 }) 
-            .populate('author', 'UserName fullname')
-            .limit(limit);
+exports.updateProblem = asyncHandler(async (req, res) => {
+    const problem = await Problem.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    });
 
-       res.status(200).json({
-            success: true,
-            count: problems.length,
-            data: problems
-        });
-    } catch (err) {
-        next(err);
+    if (!problem) {
+        res.status(404);
+        throw new Error('Problem not found');
     }
-};
+
+    res.status(200).json({
+        success: true,
+        data: problem
+    });
+});
+
+exports.deleteProblem = asyncHandler(async (req, res) => {
+    const problem = await Problem.findByIdAndDelete(req.params.id);
+    if (!problem) {
+        res.status(404);
+        throw new Error('Problem not found');
+    }
+    res.status(200).json({ success: true, data: {} });
+});
+
+exports.getFeaturedProblems = asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit, 10) || 3;
+    const problems = await Problem.find({ isFeatured: true })
+        .sort({ createdAt: -1 }) 
+        .populate('author', 'UserName fullname')
+        .limit(limit);
+
+    res.status(200).json({
+        success: true,
+        count: problems.length,
+        data: problems
+    });
+});
