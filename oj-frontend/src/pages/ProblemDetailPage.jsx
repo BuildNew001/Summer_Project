@@ -18,7 +18,7 @@ const ProblemDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('javascript');
+  const [language, setLanguage] = useState('cpp');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
@@ -27,7 +27,7 @@ const ProblemDetailPage = () => {
       try {
         setIsLoading(true);
         const data = await fetchProblemById(id);
-        const initialLanguage = 'javascript';
+        const initialLanguage = 'cpp';
         setProblem(data);
         setLanguage(initialLanguage);
         setCode(data.defaultCode?.[initialLanguage] || '');
@@ -80,16 +80,18 @@ const ProblemDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] to-[#111b30] text-white font-sans px-6 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-7xl mx-auto">
         {/* Problem Description */}
-        <div className="bg-[#111827] rounded-3xl p-8 shadow-2xl border border-cyan-900">
+        <div className="bg-[#111827] rounded-3xl p-8 shadow-[0_0_40px_rgba(0,255,255,0.1)] border border-cyan-900 overflow-auto">
           <Link to="/problems" className="inline-flex items-center text-cyan-400 hover:text-cyan-300 mb-5">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Problem List
           </Link>
 
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-4xl font-extrabold text-white drop-shadow-md">{problem.title}</h1>
-            <Badge className={`text-white px-3 py-1 rounded-xl ${difficultyColorMap[problem.difficulty]}`}>{problem.difficulty}</Badge>
+            <h1 className="text-4xl font-extrabold text-white drop-shadow-md tracking-tight">
+              {problem.title}
+            </h1>
+            <Badge className={`text-white px-3 py-1 rounded-xl text-sm ${difficultyColorMap[problem.difficulty]}`}>{problem.difficulty}</Badge>
           </div>
 
           <div className="prose prose-invert text-slate-300 mb-6 max-w-none prose-p:leading-relaxed prose-p:my-2" dangerouslySetInnerHTML={{ __html: problem.description?.replace(/\n/g, '<br/>') }} />
@@ -99,7 +101,7 @@ const ProblemDetailPage = () => {
               <h3 className="text-xl font-semibold text-white mb-3">Examples</h3>
               <div className="space-y-4">
                 {problem.examples.map((ex, index) => (
-                  <div key={index} className="bg-gray-800/50 p-4 rounded-xl shadow-sm">
+                  <div key={index} className="bg-gray-800/40 p-4 rounded-xl shadow-inner border border-gray-700">
                     <p className="text-white font-semibold">Example {index + 1}</p>
                     <pre className="text-sm text-slate-300 mt-2 whitespace-pre-wrap">
                       <strong>Input:</strong> {ex.input}
@@ -118,7 +120,7 @@ const ProblemDetailPage = () => {
               <h3 className="text-xl font-semibold text-white mb-3">Sample Test Cases</h3>
               <div className="space-y-3">
                 {problem.sampleTestCases.map((test, index) => (
-                  <div key={test._id || index} className="bg-gray-700/40 p-4 rounded-lg border border-gray-600">
+                  <div key={test._id || index} className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
                     <p className="text-sm text-slate-200"><strong>Input:</strong> {test.input}</p>
                     <p className="text-sm text-slate-200"><strong>Expected Output:</strong> {test.output}</p>
                   </div>
@@ -142,8 +144,8 @@ const ProblemDetailPage = () => {
         </div>
 
         {/* Code Editor & Submission */}
-        <div className="flex flex-col bg-[#0d1117] rounded-3xl border border-[#1f2937] shadow-2xl overflow-hidden" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-          <div className="flex-grow min-h-0">
+        <div className="flex flex-col bg-[#0d1117] rounded-3xl border border-[#1f2937] shadow-2xl overflow-hidden">
+          <div className="flex-grow">
             <CodeEditor
               language={language}
               onLanguageChange={setLanguage}
@@ -152,35 +154,37 @@ const ProblemDetailPage = () => {
             />
           </div>
 
-          <div className="bg-[#161b22] border-t border-white/10 p-4 flex flex-col gap-3">
+          <div className="bg-[#161b22] border-t border-white/10 px-6 py-6 flex flex-col gap-5 mt-auto">
             {submissionResult && (
               <div
-                className={`text-sm font-semibold px-4 py-2 rounded-md transition-all duration-300 ${
+                className={`text-sm font-semibold px-5 py-3 rounded-lg transition-all duration-300 shadow-md border-l-4 flex items-center gap-3 max-w-full overflow-auto whitespace-pre-wrap text-wrap break-words ${
                   submissionResult.status === 'Accepted'
-                    ? 'text-green-400 bg-green-600/20'
-                    : 'text-red-400 bg-red-600/10'
+                    ? 'text-green-400 bg-green-600/10 border-green-500'
+                    : 'text-red-400 bg-red-600/10 border-red-500'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <BadgeCheck className="w-4 h-4" />
+                <BadgeCheck className="w-5 h-5 shrink-0" />
+                <span>
                   Submission Status: {submissionResult.status} - {submissionResult.message}
-                </div>
+                </span>
               </div>
             )}
 
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !code.trim()}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-                </>
-              ) : (
-                'Submit Solution'
-              )}
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !code.trim()}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl w-full lg:w-auto"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+                  </>
+                ) : (
+                  'Submit Solution'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

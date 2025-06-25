@@ -25,7 +25,6 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     };
-
     checkAuthStatus();
   }, []);
 
@@ -35,7 +34,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.post(`${BASE_URL}/api/auth/signup`, userData, {
         withCredentials: true,
       });
-      setUser(data);
+       setUser(data.user || data);
       toast.success('Account created successfully!');
     } catch (error) {
       console.error('Signup error:', error.response?.data || error.message);
@@ -49,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.post(`${BASE_URL}/api/auth/login`, credentials, {
         withCredentials: true,
       });
-      setUser(data);
+      setUser(data.user || data);
       toast.success('Logged in successfully!');
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
@@ -91,4 +90,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

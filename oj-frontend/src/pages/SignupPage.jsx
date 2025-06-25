@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -14,27 +13,35 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import debug from 'debug';
-
-const debugSignup = debug('app:signup');
 
 const formSchema = z.object({
   fullname: z.string().min(2, "Full Name must be at least 2 characters"),
-  UserName: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+  UserName: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   mobileNumber: z.string().min(10, "Please enter a valid mobile number"),
-  role: z.enum(["user", "admin"], {
+  dob: z.string().min(1, "Please enter your date of birth"),
+  role: z.enum(["user", "admin", "setter"], {
     required_error: "Please select a role",
   }),
 });
 
 const SignupPage = () => {
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const { register } = useAuth();
+  const { register, user: authUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authUser) {
+      navigate("/profile");
+    }
+  }, [authUser, navigate]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -44,49 +51,55 @@ const SignupPage = () => {
       email: "",
       password: "",
       mobileNumber: "",
+      dob: "",
       role: "user",
     },
   });
 
   const onSubmit = async (values) => {
+    setIsSigningUp(true);
     try {
-      setIsSigningUp(true);
       await register(values);
     } catch (error) {
-      debugSignup("Signup page error:", error);
-    } finally {
+      console.error("Signup error:", error);
       setIsSigningUp(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-tr from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12 animate-fade-in">
-      <div className="w-full max-w-lg">
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/20">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12">
+      <div className="w-full max-w-xl">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-lg p-10">
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-white mb-2">Create an Account</h1>
-            <p className="text-slate-300">Join the Online Judge community</p>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 via-purple-300 to-pink-300 animate-gradient bg-[200%_auto]">
+              Create an Account
+            </h1>
+            <p className="text-white/80 text-sm mt-2">Join the Online Judge community</p>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {['fullname', 'UserName', 'mobileNumber', 'email', 'password'].map((name, index) => (
+              {[
+                { name: "fullname", label: "Full Name", placeholder: "Enter Name Here" },
+                { name: "UserName", label: "Username", placeholder: "coolcoder" },
+                { name: "mobileNumber", label: "Mobile Number",placeholder: "Enter Mobile Number Here"},
+                { name: "email", label: "Email",placeholder: "Enter Email Here"},
+                { name: "password", label: "Password", placeholder: "••••••••", type: "password" },
+              ].map(({ name, label, placeholder, type = "text" }) => (
                 <FormField
                   key={name}
                   control={form.control}
                   name={name}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white font-medium">
-                        {name === 'UserName' ? 'Username' : name === 'mobileNumber' ? 'Mobile Number' : name.charAt(0).toUpperCase() + name.slice(1)}
-                      </FormLabel>
+                      <FormLabel className="text-white font-medium">{label}</FormLabel>
                       <FormControl>
                         <Input
-                          type={name === 'password' ? 'password' : name === 'email' ? 'email' : name === 'mobileNumber' ? 'tel' : 'text'}
-                          placeholder={name === 'UserName' ? 'coolcoder123' : name === 'email' ? 'you@example.com' : ''}
+                          type={type}
+                          placeholder={placeholder}
                           {...field}
                           disabled={isSigningUp}
-                          className="bg-white/20 border border-white/30 text-white placeholder:text-slate-400 focus:ring-[#F08080]"
+                          className="bg-[#1f1f2e] border border-white/20 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#00ffa3] rounded-lg transition"
                         />
                       </FormControl>
                       <FormMessage className="text-red-300" />
@@ -94,6 +107,25 @@ const SignupPage = () => {
                   )}
                 />
               ))}
+
+              <FormField
+                control={form.control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white font-medium">Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        disabled={isSigningUp}
+                        className="bg-[#1f1f2e] border border-white/20 text-white focus:ring-2 focus:ring-[#00ffa3] rounded-lg transition"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-300" />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -108,13 +140,17 @@ const SignupPage = () => {
                         className="flex flex-col gap-2"
                         disabled={isSigningUp}
                       >
-                        {['user', 'admin'].map(role => (
+                        {["user", "admin", "setter"].map((role) => (
                           <FormItem key={role} className="flex items-center space-x-3">
                             <FormControl>
                               <RadioGroupItem value={role} />
                             </FormControl>
                             <FormLabel className="text-white font-normal cursor-pointer">
-                              {role === 'user' ? 'Coder / Participant' : 'Administrator (Approval Needed)'}
+                              {role === "user"
+                                ? "Coder / Participant"
+                                : role === "admin"
+                                ? "Administrator"
+                                : "Problem Setter"}
                             </FormLabel>
                           </FormItem>
                         ))}
@@ -127,7 +163,7 @@ const SignupPage = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#F08080] to-[#e57373] text-white font-bold hover:opacity-90 py-3 rounded-xl shadow-lg"
+                className="w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold py-3 rounded-xl hover:scale-[1.02] transition-all duration-300"
                 disabled={isSigningUp}
               >
                 {isSigningUp ? (
@@ -144,10 +180,10 @@ const SignupPage = () => {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-white/70">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-[#F08080] hover:underline font-semibold"
+                className="text-[#00ffa3] hover:underline font-semibold"
               >
                 Login
               </Link>

@@ -1,9 +1,12 @@
-const { exec } = require('child_process')
 const fs = require('fs').promises
 const path = require('path')
 const os = require('os')
 const { v4: uuid } = require('uuid')
-const TIMEOUT = 5000
+const { executeCpp } = require('./executeCpp')
+const { executeC } = require('./executeC')
+const { executeJava } = require('./executeJava')
+const { executePy } = require('./executePy')
+
 const tempDir = path.join(os.tmpdir(), 'online-compiler')
 const setup = async () => {
   try {
@@ -24,62 +27,20 @@ const setup = async () => {
   }
 }
 setup()
-const executeCpp = (filepath, inputPath) => {
-  const jobDir = path.dirname(filepath)
-  const outPath = path.join(jobDir, 'a.exe')
-  return new Promise((resolve, reject) => {
-    exec(
-      `g++ "${filepath}" -o "${outPath}"`,
-      (compileError, stdout, stderr) => {
-        if (compileError) {
-          return reject(
-            new Error(
-              `Compilation Error: ${stderr || compileError.message}`.trim()
-            )
-          )
-        }
-        exec(
-          `"${outPath}" < "${inputPath}"`,
-          { timeout: TIMEOUT },
-          (runError, runStdout, runStderr) => {
-            if (runError) {
-              if (runError.killed) {
-                return reject(new Error('Time Limit Exceeded'))
-              }
-              return reject(
-                new Error(`Runtime Error: ${runStderr || runError.message}`)
-              )
-            }
-            resolve(runStdout)
-          }
-        )
-      }
-    )
-  })
-}
-const executePy = (filepath, inputPath) => {
-  return new Promise((resolve, reject) => {
-    exec(
-      `python "${filepath}" < "${inputPath}"`,
-      { timeout: TIMEOUT },
-      (error, stdout, stderr) => {
-        if (error) {
-          if (error.killed) {
-            return reject(new Error('Time Limit Exceeded'))
-          }
-          return reject(new Error(`Runtime Error: ${stderr || error.message}`))
-        }
-        resolve(stdout)
-      }
-    )
-  })
-}
 
 const executeCode = async (language, code, input) => {
   const jobId = uuid()
   const jobDir = path.join(tempDir, jobId)
   await fs.mkdir(jobDir, { recursive: true })
-  const sourceFilename = `main.${language}`
+
+  let sourceFilename
+  if (language === 'java') {
+    const match = code.match(/\s*public\s+class\s+([a-zA-Z0-9_]+)/)
+    const className = match ? match[1] : 'main'
+    sourceFilename = `${className}.java`
+  } else {
+    sourceFilename = `main.${language}`
+  }
   const sourcePath = path.join(jobDir, sourceFilename)
   const inputPath = path.join(jobDir, 'input.txt')
   await fs.writeFile(sourcePath, code)
@@ -91,10 +52,14 @@ const executeCode = async (language, code, input) => {
       output = await executeCpp(sourcePath, inputPath)
     } else if (language === 'py') {
       output = await executePy(sourcePath, inputPath)
+    } else if (language === 'c') {
+      output = await executeC(sourcePath, inputPath)
+    } else if (language === 'java') {
+      output = await executeJava(sourcePath, inputPath)
     } else {
       throw new Error(`Unsupported language: ${language}`)
     }
-    return { output }
+    return { output, error: '' }
   } catch (e) {
     return { output: '', error: e.message }
   } finally {

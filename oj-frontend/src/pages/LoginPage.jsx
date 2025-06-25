@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormControl,
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -22,8 +22,15 @@ const formSchema = z.object({
 });
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, user: authUser } = useAuth();
   const [isLogginIn, setIsLogginIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authUser) {
+      navigate("/profile");
+    }
+  }, [authUser, navigate]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -34,25 +41,24 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (values) => {
+    setIsLogginIn(true);
     try {
-      setIsLogginIn(true);
       await login(values);
     } catch (error) {
       console.error("Login page error:", error);
-    } finally {
       setIsLogginIn(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12 animate-fade-in">
+    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] animate-fade-in">
       <div className="w-full max-w-md">
-        <div className="bg-white/5 shadow-2xl rounded-3xl p-10 border border-white/10 backdrop-blur-md">
+        <div className="bg-white/5 border border-white/10 shadow-xl rounded-3xl p-10 backdrop-blur-md hover:border-[#00ffa3]/20 transition-all duration-300">
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 via-purple-300 to-pink-300 animate-gradient bg-[200%_auto]">
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 via-purple-300 to-pink-300 animate-gradient bg-[length:200%_auto] bg-left hover:bg-right transition-[background-position] duration-1000">
               Welcome Back
             </h1>
-            <p className="text-white/80 mt-2">Login to continue solving challenges</p>
+            <p className="text-white/80 mt-2 text-sm">Login to continue solving challenges</p>
           </div>
 
           <Form {...form}>
@@ -68,7 +74,7 @@ const LoginPage = () => {
                         placeholder="youremail@example.com"
                         {...field}
                         disabled={isLogginIn}
-                        className="focus:ring-[#00ffa3] bg-[#2a2a3a] text-white border border-white/20 rounded-lg"
+                        className="bg-[#1f1f2e] text-white border border-white/20 rounded-lg focus:ring-2 focus:ring-[#00ffa3] transition"
                       />
                     </FormControl>
                     <FormMessage />
@@ -88,7 +94,7 @@ const LoginPage = () => {
                         type="password"
                         {...field}
                         disabled={isLogginIn}
-                        className="focus:ring-[#00ffa3] bg-[#2a2a3a] text-white border border-white/20 rounded-lg"
+                        className="bg-[#1f1f2e] text-white border border-white/20 rounded-lg focus:ring-2 focus:ring-[#00ffa3] transition"
                       />
                     </FormControl>
                     <FormMessage />
@@ -98,12 +104,13 @@ const LoginPage = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold py-2 px-4 rounded-xl hover:scale-105 hover:shadow-xl transition-transform duration-300"
                 disabled={isLogginIn}
+                className="w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold py-2 px-4 rounded-xl hover:scale-[1.03] transition-transform duration-300"
               >
                 {isLogginIn ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging In...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging In...
                   </>
                 ) : (
                   "Login"
@@ -112,16 +119,14 @@ const LoginPage = () => {
             </form>
           </Form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-white/70">
-              Don't have an account?{' '}
-              <Link
-                to="/signup"
-                className="text-[#00ffa3] hover:underline font-semibold"
-              >
-                Sign Up
-              </Link>
-            </p>
+          <div className="mt-6 text-center text-white/70 text-sm">
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-[#00ffa3] font-medium hover:underline transition"
+            >
+              Sign Up
+            </Link>
           </div>
         </div>
       </div>

@@ -26,7 +26,11 @@ const sendTokenResponse = (user, statusCode, res) => {
   };
 
   res.status(statusCode).cookie('token', token, options).json({
-    id: user._id, Username: user.UserName, role: user.role
+    _id: user._id,
+    fullname: user.fullname,
+    UserName: user.UserName,
+    email: user.email,
+    role: user.role,
   });
 };
 
