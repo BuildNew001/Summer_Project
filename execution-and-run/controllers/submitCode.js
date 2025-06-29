@@ -1,25 +1,44 @@
-
+const Submission = require('../models/submission');
+const Problem = require('../models/problem');
 const { executeCode } = require('../utils/execution');
-const runCode = async (req, res, next) => {
-    const { language = 'cpp', code, input = '' } = req.body;
+const processSubmission = async (submissionId, code, language, problemId) => {
+    const problem = await Problem.findById(problemId);
+    let allPassed = true;
+    let verdict = '';
+    let finalOutput = '';
 
-    if (!code) {
-        return res.status(400).json({ success: false, error: 'Code body cannot be empty.' });
-    }
-
-    try {
-        const { output, error } = await executeCode(language, code, input);
-         const normalizedOutput = output.replace(/\r\n/g, '\n');
+    for (const testCase of problem.sampleTestCases) {
+        const { input, expectedOutput } = testCase;
+        const { output, error } = await executeCode(language, code, input || '');
         if (error) {
-            return res.status(200).json({ success: true, output: error });
+            allPassed = false;
+            verdict = 'Runtime Error';
+            finalOutput = error;
+            break; 
         }
-        res.status(200).json({ success: true, normalizedOutput });
-    } catch (err) {
-        next(err);
+        const normalizedOutput = output.trim().replace(/\r\n/g, '\n');
+        const normalizedExpected = (expectedOutput || '').trim().replace(/\r\n/g, '\n');
+        if (normalizedOutput !== normalizedExpected) {
+            allPassed = false;
+            verdict = 'Wrong Answer';
+            finalOutput = `Input:\n${input}\n\nExpected:\n${normalizedExpected}\n\nGot:\n${normalizedOutput}`;
+            break; 
+        }
     }
+
+    if (allPassed) {
+        verdict = 'Accepted';
+        finalOutput = 'All test cases passed.';
+    }
+    await Submission.findByIdAndUpdate(submissionId, {
+        status: verdict,
+        output: finalOutput,
+        error: verdict === 'Runtime Error' ? finalOutput : '',
+    });
+
+    console.log(`Submission ${submissionId} evaluated with verdict: ${verdict}`);
 };
 
 module.exports = {
-    runCode,
+    processSubmission,
 };
-
