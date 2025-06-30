@@ -1,51 +1,57 @@
 import React, { useMemo } from 'react';
-import ActivityCalendar from 'react-activity-calendar';
+import CalendarHeatmap from 'react-calendar-heatmap';
+import 'react-calendar-heatmap/dist/styles.css';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import { Target, Flame, Trophy, CalendarX } from 'lucide-react';
 
-const getLevel = (count) => {
-  if (count < 1) return 0;
-  if (count <= 2) return 1;
-  if (count <= 4) return 2;
-  if (count <= 6) return 3;
-  return 4;
-};
+const HEATMAP_COLORS = [
+  '#2d333b', // 0 submissions
+  '#0e4429', // 1 submission
+  '#006d32', // 2 submissions
+  '#26a641', // 3 submissions
+  '#39d353', // 4+ submissions
+];
 
 const SubmissionActivity = ({ submissions }) => {
-  const { data, totalSolved, currentStreak, longestStreak } = useMemo(() => {
-    if (!submissions || submissions.length === 0) {
+  const {
+    data,
+    totalSolved,
+    currentStreak,
+    longestStreak,
+    totalAcceptedSubmissions,
+  } = useMemo(() => {
+    if (!Array.isArray(submissions) || submissions.length === 0) {
       return {
         data: [],
         totalSolved: 0,
         currentStreak: 0,
         longestStreak: 0,
+        totalAcceptedSubmissions: 0,
       };
     }
 
-    const acceptedSubs = submissions.filter((s) => s.verdict === 'Accepted');
+    const acceptedSubs = submissions.filter((s) => s.status === 'Accepted');
 
     const dailyCounts = acceptedSubs.reduce((acc, sub) => {
+      if (!sub.createdAt) return acc;
       const date = new Date(sub.createdAt).toISOString().slice(0, 10);
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     }, {});
 
-    const activityData = Object.entries(dailyCounts).map(([date, count]) => ({
-      date,
-      count,
-      level: getLevel(count),
-    }));
+    const activityData = Object.entries(dailyCounts).map(([date, count]) => ({ date, count }));
 
     const solvedProblems = new Map();
     acceptedSubs.forEach((sub) => {
       const problemId = sub.problem?._id;
-      if (!problemId) return;
       const submissionDate = new Date(sub.createdAt);
+      if (!problemId || isNaN(submissionDate)) return;
       if (!solvedProblems.has(problemId) || submissionDate < solvedProblems.get(problemId)) {
         solvedProblems.set(problemId, submissionDate);
       }
     });
 
     const totalSolved = solvedProblems.size;
-
     const uniqueSolveDates = [...new Set([...solvedProblems.values()].map((d) => d.toISOString().slice(0, 10)))].sort();
 
     let currentStreak = 0;
@@ -77,88 +83,142 @@ const SubmissionActivity = ({ submissions }) => {
       }
     }
 
-    return { data: activityData, totalSolved, currentStreak, longestStreak };
+    return {
+      data: activityData,
+      totalSolved,
+      currentStreak,
+      longestStreak,
+      totalAcceptedSubmissions: acceptedSubs.length,
+    };
   }, [submissions]);
-
-  const explicitTheme = {
-    light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
-    dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
-  };
-
-  // Custom tooltip formatter
-  const renderTooltip = (props) =>
-    props.count ? `${props.count} ${props.count === 1 ? 'problem' : 'problems'} solved on ${props.date}` : '';
 
   return (
     <div className="space-y-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-        <div className="rounded-2xl bg-gradient-to-br from-green-400/10 to-green-100/10 p-6 border border-green-300/20 shadow-inner">
-          <p className="text-5xl font-bold text-green-400 drop-shadow">{totalSolved}</p>
-          <p className="text-sm text-gray-300 mt-1">Problems Solved</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-orange-400/10 to-orange-100/10 p-6 border border-orange-300/20 shadow-inner">
-          <p className="text-5xl font-bold text-orange-400 drop-shadow">{currentStreak} days</p>
-          <p className="text-sm text-gray-300 mt-1">Current Streak</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-blue-400/10 to-blue-100/10 p-6 border border-blue-300/20 shadow-inner">
-          <p className="text-5xl font-bold text-blue-400 drop-shadow">{longestStreak} days</p>
-          <p className="text-sm text-gray-300 mt-1">Longest Streak</p>
-        </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <StatCard icon={<Target className="w-8 h-8 text-green-400" />} label="Problems Solved" value={totalSolved} color="green" />
+        <StatCard icon={<Flame className="w-8 h-8 text-orange-400" />} label="Current Streak" value={`${currentStreak} days`} color="orange" />
+        <StatCard icon={<Trophy className="w-8 h-8 text-blue-400" />} label="Longest Streak" value={`${longestStreak} days`} color="blue" />
       </div>
 
-      {/* Calendar Section */}
-      <div className="rounded-xl border border-white/10 bg-[#0f172a]/60 shadow-xl p-6">
+      {/* Calendar Heatmap */}
+      <div>
         {data.length > 0 ? (
           <>
-            <h3 className="text-lg font-semibold text-white mb-4">Daily Problem Solving Activity</h3>
-            <ActivityCalendar
-              data={data}
-              theme={explicitTheme}
-              showWeekdayLabels
-              renderBlock={(block, attributes) => (
-                <rect {...attributes} rx={3} ry={3} />
-              )}
-              transformCells={(cells) =>
-                cells.map((cell) => ({
-                  ...cell,
-                  title: renderTooltip(cell),
-                }))
-              }
-              blockSize={14}
-              blockMargin={4}
-              labels={{
-                totalCount: '{{count}} problem{{plural}} solved',
-                legend: {
-                  less: 'Less',
-                  more: 'More',
-                },
-              }}
-            />
-
-            {/* Legend */}
-            <div className="flex justify-center items-center gap-6 mt-4 text-xs text-gray-400">
-              <span>No submissions</span>
-              <div className="flex space-x-2">
-                {[0, 1, 2, 3, 4].map((level) => (
-                  <div key={level} className="flex items-center">
-                    <div
-                      className="w-4 h-4 mx-1"
-                      style={{ backgroundColor: explicitTheme.dark[level] }}
-                      title={`Level ${level}`}
-                    />
-                    {level === 4 ? '6+' : level * 2}
-                  </div>
-                ))}
+            <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
+              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">
+                Daily Problem Solving
+              </h3>
+              <div className="flex items-center gap-2 text-xs text-gray-400 self-start md:self-center">
+                <span className="text-gray-500">Less</span>
+                <div className="flex items-center gap-1">
+                  {HEATMAP_COLORS.map((color) => (
+                    <div key={color} className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
+                  ))}
+                </div>
+                <span className="text-gray-500">More</span>
               </div>
-              <span>Submissions per day</span>
+            </div>
+            <div className="rounded-xl bg-[#13131f] p-4 sm:p-6 shadow-inner shadow-cyan-800/10 ring-1 ring-white/5 animate-fade-in-up overflow-x-auto">
+              <CalendarHeatmap
+                startDate={new Date(new Date().setFullYear(new Date().getFullYear() - 1))}
+                endDate={new Date()}
+                values={data}
+                classForValue={(value) => {
+                  if (!value || value.count === 0) {
+                    return 'color-empty';
+                  }
+                  const count = Math.min(value.count, 4);
+                  return `color-scale-${count}`;
+                }}
+                tooltipDataAttrs={(value) => {
+                  if (!value || !value.date) return null;
+                  return {
+                    'data-tooltip-id': 'heatmap-tooltip',
+                    'data-tooltip-content': `${value.count || 0} submission${value.count > 1 ? 's' : ''} on ${new Date(value.date).toLocaleDateString()}`,
+                  };
+                }}
+              />
+              <ReactTooltip
+                id="heatmap-tooltip"
+                place="top"
+                effect="solid"
+                className="!bg-[#1f2937] !text-white !text-xs !rounded-md !shadow-xl px-2 py-1"
+              />
+              <style>{`
+                @keyframes fade-in-up {
+                  0% { opacity: 0; transform: translateY(10px); }
+                  100% { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up {
+                  animation: fade-in-up 0.6s ease-out;
+                }
+
+                .react-calendar-heatmap .color-empty { fill: ${HEATMAP_COLORS[0]}; }
+                .react-calendar-heatmap .color-scale-1 { fill: ${HEATMAP_COLORS[1]}; }
+                .react-calendar-heatmap .color-scale-2 { fill: ${HEATMAP_COLORS[2]}; }
+                .react-calendar-heatmap .color-scale-3 { fill: ${HEATMAP_COLORS[3]}; }
+                .react-calendar-heatmap .color-scale-4 { fill: ${HEATMAP_COLORS[4]}; }
+
+                .react-calendar-heatmap .react-calendar-heatmap-month-label,
+                .react-calendar-heatmap .react-calendar-heatmap-weekday-label {
+                  font-size: 10px;
+                  fill: #94a3b8;
+                  font-weight: 500;
+                }
+
+                .react-calendar-heatmap rect {
+                  rx: 4;
+                  ry: 4;
+                  transition: fill 0.3s ease, stroke 0.3s ease;
+                  shape-rendering: geometricPrecision;
+                }
+
+                .react-calendar-heatmap rect:hover {
+                  stroke: #ffffff40;
+                  stroke-width: 1.2px;
+                  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.08));
+                  cursor: pointer;
+                }
+              `}</style>
             </div>
           </>
         ) : (
-          <div className="text-center text-gray-500 py-10 italic animate-pulse">
-            No activity to display. Keep solving!
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <CalendarX className="w-16 h-16 text-gray-600/50 mb-4" />
+            <h4 className="text-lg font-semibold text-gray-400">No Activity Yet</h4>
+            <p className="text-sm text-gray-500 mt-1">Your submission activity will appear here once you solve some problems.</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ icon, label, value, color }) => {
+  const styles = {
+    green: {
+      wrapper: 'hover:border-green-400/50',
+      iconBg: 'bg-green-500/10',
+    },
+    orange: {
+      wrapper: 'hover:border-orange-400/50',
+      iconBg: 'bg-orange-500/10',
+    },
+    blue: {
+      wrapper: 'hover:border-blue-400/50',
+      iconBg: 'bg-blue-500/10',
+    },
+  }[color];
+
+  return (
+    <div className={`bg-[#1c1c2e] rounded-xl p-6 flex items-center gap-6 border border-white/5 shadow-lg transition-all hover:bg-[#24243e] ${styles.wrapper}`}>
+      <div className={`${styles.iconBg} p-3 rounded-lg`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-white">{value}</p>
+        <p className="text-sm text-gray-400">{label}</p>
       </div>
     </div>
   );

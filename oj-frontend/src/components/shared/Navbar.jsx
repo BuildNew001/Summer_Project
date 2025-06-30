@@ -87,7 +87,7 @@ const Navbar = () => {
         <div
           className={cn(
             'overflow-hidden md:hidden transition-all duration-500 ease-in-out',
-            mobileMenuOpen ? 'max-h-[300px] opacity-100 scale-100 mt-2' : 'max-h-0 opacity-0 scale-95'
+            mobileMenuOpen ? 'max-h-[400px] opacity-100 scale-100 mt-2' : 'max-h-0 opacity-0 scale-95'
           )}
         >
           <div className='bg-[#1c1c2b]/95 rounded-xl p-4 shadow-2xl space-y-4'>
@@ -107,9 +107,16 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            <div className='border-t border-white/10 pt-4 mt-2 space-y-2'>
+            {/* Divider */}
+            <div className='relative pt-4 mt-4'>
+              <div className='absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent' />
+            </div>
+
+            {/* Auth on Mobile */}
+            <div className='pt-4 space-y-2'>
               {authUser ? (
-                <div className='flex items-center justify-start px-2'>
+                <div className='flex items-center justify-between px-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition'>
+                  <span className='text-white/70 text-sm font-medium px-2'>Account</span>
                   <UserButton />
                 </div>
               ) : (
@@ -123,7 +130,7 @@ const Navbar = () => {
                     </Button>
                   </Link>
                   <Link to='/signup' onClick={() => setMobileMenuOpen(false)}>
-                    <Button className='w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] transition'>
+                    <Button className='w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] hover:shadow-[0_0_12px_#00ffa3] transition'>
                       Sign Up
                     </Button>
                   </Link>

@@ -48,15 +48,26 @@ export const submitCode = async ({ problemId, language, code }) => {
   }
 }
 
-export const runCode = async (language, code) => {
+export const fetchMySubmissions = async () => {
+  try {
+    const response = await api.get('/submissions');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching submissions:', error);
+    throw error.response?.data || new Error('Server error');
+  }
+};
+
+export const runCode = async (language, code, input) => {
   try {
     const response = await api.post('/run', {
       language,
-      code
-    })
-    return response.data
+      code,
+      input,
+    });
+    return response.data;
   } catch (error) {
-    console.error('Error running code:', error)
-    throw error.response?.data || new Error('Server error')
+    console.error('Error running code:', error);
+    throw error.response?.data || new Error('Server error');
   }
-}
+};

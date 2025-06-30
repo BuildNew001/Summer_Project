@@ -79,8 +79,8 @@ const ProblemDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] to-[#111b30] text-white font-sans px-6 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] to-[#111b30] text-white font-sans px-6 py-10 animate-fade-in-up">
+      <div className="max-w-7xl mx-auto flex flex-col gap-10">
         {/* Problem Description */}
         <div className="bg-[#111827] rounded-3xl p-8 shadow-[0_0_40px_rgba(0,255,255,0.1)] border border-cyan-900 overflow-auto">
           <Link to="/problems" className="inline-flex items-center text-cyan-400 hover:text-cyan-300 mb-5">
@@ -143,49 +143,43 @@ const ProblemDetailPage = () => {
           )}
         </div>
 
-        {/* Code Editor & Submission */}
-        <div className="flex flex-col bg-[#0d1117] rounded-3xl border border-[#1f2937] shadow-2xl overflow-hidden">
-          <div className="flex-grow">
-            <CodeEditor
-              language={language}
-              onLanguageChange={setLanguage}
-              code={code}
-              onCodeChange={setCode}
-            />
-          </div>
+        {/* Code Editor + Submit Button */}
+        <div className="flex flex-col gap-6 bg-[#111827] rounded-3xl p-6 border border-[#2f3542] shadow-2xl">
+          <CodeEditor
+            language={language}
+            onLanguageChange={setLanguage}
+            code={code}
+            onCodeChange={setCode}
+          />
 
-          <div className="bg-[#161b22] border-t border-white/10 px-6 py-6 flex flex-col gap-5 mt-auto">
-            {submissionResult && (
-              <div
-                className={`text-sm font-semibold px-5 py-3 rounded-lg transition-all duration-300 shadow-md border-l-4 flex items-center gap-3 max-w-full overflow-auto whitespace-pre-wrap text-wrap break-words ${
-                  submissionResult.status === 'Accepted'
-                    ? 'text-green-400 bg-green-600/10 border-green-500'
-                    : 'text-red-400 bg-red-600/10 border-red-500'
-                }`}
-              >
-                <BadgeCheck className="w-5 h-5 shrink-0" />
-                <span>
-                  Submission Status: {submissionResult.status} - {submissionResult.message}
-                </span>
-              </div>
-            )}
-
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !code.trim()}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl w-full lg:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-                  </>
-                ) : (
-                  'Submit Solution'
-                )}
-              </Button>
+          {submissionResult && (
+            <div
+              className={`text-sm font-semibold px-5 py-3 rounded-lg transition-all duration-300 shadow-md border-l-4 flex items-center gap-3 max-w-full overflow-auto whitespace-pre-wrap text-wrap break-words ${
+                submissionResult.status === 'Accepted'
+                  ? 'text-green-400 bg-green-600/10 border-green-500'
+                  : 'text-red-400 bg-red-600/10 border-red-500'
+              }`}
+            >
+              <BadgeCheck className="w-5 h-5 shrink-0" />
+              <span>
+                Submission Status: {submissionResult.status} - {submissionResult.message}
+              </span>
             </div>
-          </div>
+          )}
+
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !code.trim()}
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl w-full"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+              </>
+            ) : (
+              'Submit Solution'
+            )}
+          </Button>
         </div>
       </div>
     </div>

@@ -1,7 +1,26 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
 @custom-variant dark (&:is(.dark *));
+
+.react-activity-calendar__calendar text:not([font-size='10']) {
+  fill: white;
+  font-size: 10px;
+  font-weight: 600;
+  text-anchor: middle; 
+  dominant-baseline: middle; 
+  transform: translateX(-12px);
+}
+/* Label: "2 submissions in the last year" */
+.react-activity-calendar__footer {
+  color: white;
+  font-weight: 500;
+}
+
+/* Labels: Less and More */
+.react-activity-calendar__legend span {
+  color: white;
+}
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -108,6 +127,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+@layer utilities {
+  .menu-item {
+    @apply hover:bg-white/10 hover:text-[#00ffa3] px-4 py-2 rounded-md transition duration-200 text-sm font-medium cursor-pointer;
+  }
+    .menu-item.logout {
+    @apply text-red-400 hover:text-red-900  font-semibold;
+  }
 }
 
 @layer base {

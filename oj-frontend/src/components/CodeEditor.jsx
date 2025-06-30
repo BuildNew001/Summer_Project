@@ -12,15 +12,20 @@ import {
 } from '@/components/ui/select';
 import MonacoEditor from '@monaco-editor/react';
 
+// Monaco language map (VSCode language identifiers)
 const languageMap = {
   cpp: 'cpp',
-  python: 'python',
+  c: 'c',
+  java: 'java',
+  py: 'python',
   javascript: 'javascript',
 };
 
 const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
   const [output, setOutput] = useState('');
+  const [customInput, setCustomInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+  const [activeTab, setActiveTab] = useState('editor');
 
   const handleRunCode = async () => {
     if (!code.trim()) {
@@ -30,21 +35,41 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
 
     setIsRunning(true);
     setOutput('');
+    setActiveTab('output');
+
     try {
-      const data = await runCode(language, code);
+      const data = await runCode(language, code, customInput);
       setOutput(data.output);
       toast.success('Code ran successfully!');
     } catch (error) {
-      const errorMessage = error.output || error.message || 'Failed to run code.';
-      setOutput(errorMessage);
-      toast.error(errorMessage);
+      let outputMessage = 'An unknown error occurred.';
+      let toastMessage = 'Execution Failed';
+
+      const fullErrorString = error?.error || error?.stderr;
+      if (typeof fullErrorString === 'string') {
+        const parts = fullErrorString.split(': error: ');
+        if (parts.length > 1) {
+          const errorType = parts[0].split(':')[0].trim();
+          const errorDetails = `error: ${parts.slice(1).join(': error: ')}`;
+          outputMessage = `${errorType}:\n\n${errorDetails}`;
+          toastMessage = errorType;
+        } else {
+          outputMessage = fullErrorString;
+        }
+      } else {
+        outputMessage = error?.message || JSON.stringify(error);
+        toastMessage = error?.message || 'Execution Failed';
+      }
+
+      setOutput(outputMessage);
+      toast.error(toastMessage);
     } finally {
       setIsRunning(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full w-full rounded-2xl border border-[#2f3542] bg-gradient-to-br from-[#0e111a] to-[#1a1f2e] shadow-[0_0_30px_rgba(0,0,0,0.5)] backdrop-blur-md overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-120px)] w-full rounded-2xl border border-[#2f3542] bg-gradient-to-br from-[#0e111a] to-[#1a1f2e] shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
         <div className="flex items-center gap-3">
@@ -54,9 +79,11 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
               <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent className="bg-[#161b22] text-white border border-[#30363d]">
+              <SelectItem value="c">C</SelectItem>
               <SelectItem value="cpp">C++</SelectItem>
+              <SelectItem value="java">Java</SelectItem>
+              <SelectItem value="py">Python</SelectItem>
               <SelectItem value="javascript">JavaScript</SelectItem>
-              <SelectItem value="python">Python</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -71,43 +98,72 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
         </Button>
       </div>
 
-      {/* Code Editor */}
-      <div className="flex-grow min-h-[300px] border-b border-[#30363d]">
-        <MonacoEditor
-          height="100%"
-          language={languageMap[language]}
-          value={code}
-          onChange={(value) => onCodeChange(value)}
-          theme="vs-dark"
-          options={{
-            fontSize: 14,
-            fontFamily: 'Fira Code, monospace',
-            fontLigatures: true,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: 'on',
-            tabSize: 2,
-            automaticLayout: true,
-            padding: { top: 12, bottom: 12 },
-            lineNumbers: 'on',
-            roundedSelection: false,
-            cursorSmoothCaretAnimation: true,
-            scrollbar: {
-              verticalScrollbarSize: 5,
-              horizontalScrollbarSize: 5,
-            },
-          }}
-        />
+      {/* Tabs */}
+      <div className="flex bg-[#0f1117] text-sm text-white border-b border-[#30363d]">
+        {['editor', 'input', 'output'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 transition-all duration-200 border-b-2 font-semibold uppercase tracking-wide text-xs sm:text-sm md:text-base lg:text-sm xl:text-base ${
+              activeTab === tab ? 'border-[#00ffa3] text-[#00ffa3]' : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {/* Output Panel */}
-      <div className="bg-[#0f1117] px-6 py-4 max-h-64 overflow-auto border-t border-[#30363d] animate-in fade-in duration-300">
-        <div className="text-sm font-bold text-[#00ffa3] mb-2 tracking-wide flex items-center gap-2">
-          <span className="bg-[#00ffa3]/10 px-2 py-0.5 rounded text-xs text-[#00ffa3]">OUTPUT</span>
-        </div>
-        <div className="bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 whitespace-pre-wrap break-words leading-relaxed border border-[#2f3542] shadow-inner">
-          {output || '// Click "Run Code" to see output.'}
-        </div>
+      {/* Panels */}
+      <div className="flex-grow bg-[#0e111a]">
+        {activeTab === 'editor' && (
+          <MonacoEditor
+            height="100%"
+            language={languageMap[language] || 'plaintext'}
+            value={code}
+            onChange={(value) => onCodeChange(value)}
+            theme="vs-dark"
+            options={{
+              fontSize: 14,
+              fontFamily: 'Fira Code, monospace',
+              fontLigatures: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              tabSize: 2,
+              automaticLayout: true,
+              padding: { top: 12, bottom: 12 },
+              lineNumbers: 'on',
+              roundedSelection: false,
+              cursorSmoothCaretAnimation: true,
+              scrollbar: {
+                verticalScrollbarSize: 5,
+                horizontalScrollbarSize: 5,
+              },
+            }}
+          />
+        )}
+
+        {activeTab === 'input' && (
+          <div className="p-6">
+            <div className="text-sm font-bold text-blue-400 mb-2">CUSTOM INPUT</div>
+            <textarea
+              rows={8}
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              className="w-full h-full bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 border border-[#2f3542] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="Enter input for your program here..."
+            />
+          </div>
+        )}
+
+        {activeTab === 'output' && (
+          <div className="p-6">
+            <div className="text-sm font-bold text-[#00ffa3] mb-2">OUTPUT</div>
+            <div className="bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 whitespace-pre-wrap break-words leading-relaxed border border-[#2f3542] shadow-inner min-h-[120px]">
+              {output || '// Click "Run Code" to see output.'}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

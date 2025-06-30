@@ -12,7 +12,6 @@ import { Loader2 } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/shared/ProtectedRoute' 
 import AdminRoute from './components/shared/AdminRoute'
-// TODO: Create these page components in their own files inside src/pages
 const ContestsPage = () => <div className='p-8 text-white'>Contests Page (TODO)</div>
 const MySubmissionsPage = () => <div className='p-8 text-white'>My Submissions Page (TODO)</div>
 const AdminDashboardPage = () => <div className='p-8 text-white'>Admin Dashboard (TODO)</div>
@@ -38,7 +37,6 @@ const App = () => {
           {/* Public routes */}
           <Route path='/login' element={<LoginPage />} />
           <Route path='/signup' element={<SignupPage />} />
-
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute />}>
             <Route path='/' element={<HomePage />} />

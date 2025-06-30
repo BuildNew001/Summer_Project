@@ -5,7 +5,7 @@ import { Code, Trophy, BookOpen } from 'lucide-react';
 import { fetchFeaturedProblems } from '../context/problemfetch';
 const DEFAULT_OJ_LOGO_URL = '/logo-normal.png';
 const HOVER_OJ_LOGO_URL = '/logo-hover.png';
-
+import Footer from '../components/shared/Footer'
 const Home = () => {
   const [featuredProblems, setFeaturedProblems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +32,7 @@ const Home = () => {
   }, []);
 
   return (
+    <>
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#0d152c] to-[#0a0f1e] text-white font-sans">
       <section className="relative py-32 text-center overflow-hidden bg-[url('/background-coding.jpg')] bg-cover bg-center">
         <div className="backdrop-blur-md bg-black/60 py-16 px-10 rounded-3xl w-[95%] md:w-[80%] mx-auto shadow-2xl animate-fade-in border border-white/10">
@@ -148,6 +149,8 @@ const Home = () => {
         </div>
       </section>
     </div>
+    <Footer />
+    </>
   );
 };
 

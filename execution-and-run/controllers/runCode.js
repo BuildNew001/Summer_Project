@@ -1,20 +1,23 @@
-const dotenv = require('dotenv');
 const { executeCode } = require('../utils/execution');
+
 const runCode = async (req, res, next) => {
     const { language = 'cpp', code, input = '' } = req.body;
 
     if (!code) {
-        return res.status(400).json({ success: false, error: 'Code body cannot be empty.' });
+        return res.status(400).json({ success: false, output: '', error: 'Code body cannot be empty.' });
     }
 
     try {
         const { output, error } = await executeCode(language, code, input);
-         const normalizedOutput = output.replace(/\r\n/g, '\n');
+        
+        console.log(error)
         if (error) {
-            return res.status(200).json({ success: true, output: error });
+            return res.status(200).json({ success: false, output: '', error });
         }
-        res.status(200).json({ success: true, normalizedOutput });
+        const normalizedOutput = output.replace(/\r\n/g, '\n');
+        return res.status(200).json({ success: true, output: normalizedOutput, error: '' });
     } catch (err) {
+        console.log("error")
         next(err);
     }
 };
@@ -22,4 +25,3 @@ const runCode = async (req, res, next) => {
 module.exports = {
     runCode,
 };
-
