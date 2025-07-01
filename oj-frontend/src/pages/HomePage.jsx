@@ -1,155 +1,238 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
-import { Code, Trophy, BookOpen } from 'lucide-react';
-import { fetchFeaturedProblems } from '../context/problemfetch';
+import { Trophy, BookOpen, Code, ArrowRight } from 'lucide-react';
+import { useFeaturedProblems } from '../hooks/useFeaturedProblems';
+import Footer from '../components/shared/Footer';
+
 const DEFAULT_OJ_LOGO_URL = '/logo-normal.png';
 const HOVER_OJ_LOGO_URL = '/logo-hover.png';
-import Footer from '../components/shared/Footer'
+
 const Home = () => {
-  const [featuredProblems, setFeaturedProblems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { problems: featuredProblems, isLoading, error } = useFeaturedProblems(3);
   const [isHovering, setIsHovering] = useState(false);
 
-  useEffect(() => {
-     const getFeaturedProblems = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const problems = await fetchFeaturedProblems(3);
-        const formattedProblems = problems.map(p => ({ ...p, link: `/problems/${p._id}` }));
-        setFeaturedProblems(formattedProblems);
-      } catch (err) {
-        setError(err.message || 'Failed to fetch featured problems.');
-        setFeaturedProblems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const SkeletonCard = () => (
+    <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 animate-pulse">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-6 h-6 bg-slate-700 rounded-md"></div>
+        <div className="w-3/4 h-6 bg-slate-700 rounded-md"></div>
+      </div>
+      <div className="w-1/2 h-5 bg-slate-700 rounded-md mb-4"></div>
+      <div className="w-full h-10 bg-slate-700 rounded-lg"></div>
+    </div>
+  );
 
-    getFeaturedProblems();
-  }, []);
+  const heroTitle = "Online Judge Terminal";
+  const sentenceVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delay: 0.3,
+        staggerChildren: 0.06,
+      },
+    },
+  };
+  const letterVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+    },
+  };
+
+  const cardContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
+  };
 
   return (
     <>
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#0d152c] to-[#0a0f1e] text-white font-sans">
-      <section className="relative py-32 text-center overflow-hidden bg-[url('/background-coding.jpg')] bg-cover bg-center">
-        <div className="backdrop-blur-md bg-black/60 py-16 px-10 rounded-3xl w-[95%] md:w-[80%] mx-auto shadow-2xl animate-fade-in border border-white/10">
+      <main
+        className="min-h-screen text-slate-200 font-sans bg-cover bg-center bg-fixed"
+        style={{
+          backgroundImage: "linear-gradient(rgba(10, 15, 30, 0.85), rgba(10, 15, 30, 0.85)), url('/bg.png')"
+        }}>
+        <section
+          className="relative flex items-center justify-center text-center py-32 px-6 text-white overflow-hidden h-screen"
+        >
           <div
-            className="inline-flex flex-col sm:flex-row items-center justify-center gap-6 cursor-pointer group"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
-            <div className="relative h-24 w-24">
-              <img
-                src={DEFAULT_OJ_LOGO_URL}
-                alt="Default Logo"
-                className={`absolute inset-0 h-full w-full transition-opacity duration-500 object-contain ${
-                  isHovering ? 'opacity-0' : 'opacity-100'
-                }`}
-              />
-              <img
-                src={HOVER_OJ_LOGO_URL}
-                alt="Hover Logo"
-                className={`absolute inset-0 h-full w-full transition-opacity duration-500 object-contain ${
-                  isHovering ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-            </div>
-            <h1 className="text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-pink-400 via-indigo-400 to-cyan-400 animate-gradient bg-[200%_auto]">
-              Online Judge
-            </h1>
-          </div>
-          <p className="mt-6 text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Sharpen your skills, join global challenges, and rise in the ranks.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-6">
-            <Link to="/problems">
-              <Button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 hover:shadow-2xl transition-all">
-                Dive into Problems <BookOpen className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/contests">
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold px-8 py-3 rounded-2xl shadow-xl hover:scale-105 hover:shadow-2xl transition-all">
-                Compete in Contests <Trophy className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 bg-[#101b3f] animate-fade-in">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="text-center mb-14">
-            <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-500 to-red-500 animate-gradient">Featured Challenges</h2>
-            <p className="text-slate-400 mt-3 max-w-xl mx-auto">
-              Hand-picked problems to test your limits and expand your skills.
+            className="absolute inset-0 z-0 opacity-20" // Reduced opacity from 50 to 20 for a more subtle grid effect.
+            style={{
+              backgroundImage: 'linear-gradient(rgba(200, 220, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 220, 255, 0.05) 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+            }}
+          />
+          <div className="relative z-10 max-w-5xl mx-auto">
+            <motion.div
+              className="inline-flex flex-col sm:flex-row items-center justify-center gap-6 cursor-pointer group"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <div className="relative h-24 w-24 shrink-0">
+                <img
+                  src={DEFAULT_OJ_LOGO_URL}
+                  alt="Logo"
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-500 object-contain ${
+                    isHovering ? 'opacity-0' : 'opacity-100'
+                  }`}
+                />
+                <img
+                  src={HOVER_OJ_LOGO_URL}
+                  alt="Logo Hover"
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-500 object-contain ${
+                    isHovering ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </div>
+              <motion.h1
+                className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-green-300 via-cyan-400 to-blue-500 animate-gradient bg-[200%_auto]"
+                variants={sentenceVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {heroTitle.split("").map((char, index) => (
+                  <motion.span key={char + "-" + index} variants={letterVariants}>
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.h1>
+            </motion.div>
+            <p className="mt-6 text-lg text-slate-300 max-w-2xl mx-auto [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">
+              Solve challenges. Rank up. Conquer algorithms like a hacker. Track progress, earn trophies, and master DSA skills.
             </p>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-cyan-400"></div>
+            <div className="mt-10 flex justify-center flex-wrap gap-4 sm:gap-6">
+              <Link to="/problems">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 text-lg rounded-lg font-bold transition-all duration-500 bg-[length:200%_auto] hover:bg-right-center">
+                    Start Solving <BookOpen className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+              </Link>
+              <Link to="/contests">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" className="border-fuchsia-500 text-fuchsia-400 px-6 py-3 text-lg rounded-lg font-bold bg-transparent hover:bg-gradient-to-r hover:from-fuchsia-500 hover:to-pink-500 hover:text-white hover:border-transparent  transition-all duration-300">
+                    Join Contests <Trophy className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+              </Link>
             </div>
-          ) : error ? (
-            <p className="text-center text-red-500">Error: {error}</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProblems.map(problem => (
-                <div
-                  key={problem._id}
-                  className="bg-gradient-to-br from-[#1f2937] to-[#111827] border border-white/10 p-6 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all group hover:scale-105 hover:bg-opacity-90"
-                >
-                  <div className="flex items-center mb-4">
-                    <Code className="text-cyan-400 h-6 w-6 mr-3 group-hover:rotate-6 transition-transform" />
-                    <h3 className="text-xl font-bold text-white group-hover:text-cyan-300">{problem.title}</h3>
-                  </div>
-                  <p className="text-slate-400 mb-3">Difficulty: <span className="text-white font-semibold">{problem.difficulty}</span></p>
-                  <Link to={problem.link}>
-                    <Button className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold hover:brightness-110 hover:scale-105 transition-all rounded-xl">
-                      Crack This Challenge
+          </div>
+        </section>
+        <section className="py-20 px-6 bg-transparent">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-400 to-red-500 animate-gradient mb-2">
+              Featured Challenges
+            </h2>
+            <p className="text-center text-slate-400 mb-12">
+              Push your limits with these curated problems.
+            </p>
+            {isLoading ? ( 
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(3)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : error ? (
+              <p className="text-center text-red-400">{error}</p>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                variants={cardContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {featuredProblems.map((problem, i) => (
+                  <motion.div
+                    key={problem._id}
+                    className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700 group"
+                    variants={cardVariants}
+                    whileHover={{ y: -10, scale: 1.03, transition: { type: 'spring', stiffness: 300 } }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <Code className="text-cyan-400" />
+                      <h3 className="text-xl font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">{problem.title}</h3>
+                    </div>
+                    <p className="text-slate-400 mb-3">
+                      Difficulty:{' '}
+                      <span
+                        className={`font-semibold ${
+                          problem.difficulty === 'Easy'
+                            ? 'text-green-400'
+                            : problem.difficulty === 'Medium'
+                            ? 'text-yellow-400'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {problem.difficulty}
+                      </span>
+                    </p>
+                    <Link to={problem.link}>
+                      <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold transition-all duration-500 bg-[length:200%_auto] group-hover:bg-right-center">
+                        Solve Now
+                      </Button>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+
+            <div className="text-center mt-12">
+              <Link to="/problems">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" className="border-cyan-600 text-cyan-300 bg-transparent px-8 py-3 text-lg rounded-lg font-bold hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:text-white hover:border-transparent  transition-all duration-300">
+                    Explore All Problems <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="py-20 text-white">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="relative border border-fuchsia-500/30 bg-gradient-to-br from-slate-900 to-[#0a0f1e] p-10 rounded-3xl shadow-2xl shadow-fuchsia-500/10 text-center overflow-hidden">
+              <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-fuchsia-500/20 via-cyan-500/10 to-transparent rounded-full animate-pulse blur-3xl"></div>
+              <h2 className="relative text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-fuchsia-400 animate-gradient bg-[200%_auto]">
+                Ready to Dive In?
+              </h2>
+              <p className="relative mt-4 text-slate-400 text-lg">
+                Sign up or jump straight into challenges. No distractions — just code.
+              </p>
+              <div className="relative mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                <Link to="/signup">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button className="w-full sm:w-auto bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-lg px-8 py-3 rounded-xl font-bold transition-all duration-500 bg-[length:200%_auto] hover:bg-right-center">
+                      Create Account
                     </Button>
-                  </Link>
-                </div>
-              ))}
+                  </motion.div>
+                </Link>
+                <Link to="/problems">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="outline" className="w-full sm:w-auto border-cyan-400 text-cyan-300 bg-transparent text-lg px-8 py-3 rounded-xl font-bold hover:bg-gradient-to-r hover:from-cyan-400 hover:to-teal-400 hover:text-white hover:border-transparent transition-all duration-300">
+                      Solve Problems
+                    </Button>
+                  </motion.div>
+                </Link>
+              </div>
             </div>
-          )}
-
-          <div className="text-center mt-12">
-            <Link to="/problems">
-              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white px-8 py-3 text-lg rounded-2xl font-semibold">
-                Browse All Problems
-              </Button>
-            </Link>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-950 py-24 text-white text-center animate-fade-in-up">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <h2 className="text-5xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-br from-pink-400 via-yellow-300 to-purple-500 animate-gradient bg-[200%_auto]">
-            Ready to Level Up Your Coding Game?
-          </h2>
-          <p className="text-white/80 text-lg mb-10 leading-relaxed">
-            Join thousands of passionate developers. Rank up, solve real-world challenges, and be part of something bigger.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/signup">
-              <Button className="bg-white text-blue-800 hover:bg-slate-100 px-8 py-3 text-lg rounded-xl font-bold shadow-md hover:shadow-xl">
-                Join the Community Now
-              </Button>
-            </Link>
-            <Link to="/problems">
-              <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-lg rounded-xl font-bold shadow-md hover:shadow-xl">
-                Start Solving Today
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-    </div>
-    <Footer />
+        <Footer />
+      </main>
     </>
   );
 };

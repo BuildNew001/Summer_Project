@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { TerminalSquare, Menu, X } from 'lucide-react'
@@ -6,15 +6,48 @@ import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import UserButton from './UserButton'
 
+const NavItem = ({ to, children }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      cn(
+        'relative group text-base font-medium px-1 py-2 transition-colors duration-300',
+        isActive ? 'text-cyan-300' : 'text-white/80 hover:text-white'
+      )
+    }
+  >
+    {({ isActive }) => (
+      <>
+        {children}
+        <span
+          className={cn(
+            'absolute bottom-0 left-0 block h-0.5 bg-gradient-to-r from-cyan-400 to-green-400 transition-all duration-300',
+            isActive ? 'w-full' : 'w-0 group-hover:w-full'
+          )}
+        />
+      </>
+    )}
+  </NavLink>
+);
+
 const Navbar = () => {
   const { user: authUser } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 backdrop-blur-lg transition-all duration-300',
-        'bg-gradient-to-r from-[#0f0c29]/90 via-[#302b63]/90 to-[#24243e]/90 border-b border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
+        'fixed top-0 left-0 right-0 z-50 backdrop-blur-lg transition-all duration-300 ease-in-out',
+        scrolled ? 'bg-[#0a0f1e]/80 border-b border-slate-700 shadow-lg' : 'bg-transparent border-b border-transparent'
       )}
     >
       <div className='container mx-auto px-5'>
@@ -25,28 +58,16 @@ const Navbar = () => {
             to='/'
             className='flex items-center space-x-3 group px-3 py-1 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-white/10'
           >
-            <TerminalSquare className='h-8 w-8 text-[#00e0ff] group-hover:text-pink-400 group-hover:rotate-[8deg] transition-all duration-300' />
-            <span className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400 group-hover:brightness-125'>
+            <TerminalSquare className='h-8 w-8 text-cyan-400 group-hover:text-green-400 group-hover:rotate-[8deg] transition-all duration-300' />
+            <span className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-cyan-400 group-hover:brightness-125'>
               Online Judge
             </span>
           </Link>
 
           {/* Desktop Nav */}
           <nav className='hidden md:flex items-center space-x-6'>
-            {['/problems', '/contests'].map((path) => (
-              <NavLink
-                key={path}
-                to={path}
-                className={({ isActive }) =>
-                  cn(
-                    'text-base font-medium px-4 py-2 rounded-xl transition duration-300 hover:scale-105 hover:bg-white/10 hover:text-green-300',
-                    isActive ? 'text-[#00ffa3] font-semibold' : 'text-white/80'
-                  )
-                }
-              >
-                {path === '/problems' ? 'Problems' : 'Contests'}
-              </NavLink>
-            ))}
+            <NavItem to="/problems">Problems</NavItem>
+            <NavItem to="/contests">Contests</NavItem>
           </nav>
 
           {/* Mobile Toggle */}
@@ -68,13 +89,13 @@ const Navbar = () => {
                 <Link to='/login'>
                   <Button
                     variant='ghost'
-                    className='text-white hover:text-[#00ffa3] hover:bg-white/10 transition duration-300'
+                    className='text-white/80 hover:text-cyan-300 hover:bg-white/5 transition duration-300'
                   >
                     Login
                   </Button>
                 </Link>
                 <Link to='/signup'>
-                  <Button className='bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-semibold hover:scale-105 hover:shadow-xl transition-transform duration-300 px-6 py-2 rounded-xl '>
+                  <Button className='bg-gradient-to-r from-green-400 to-cyan-400 text-black font-semibold hover:scale-105 transition-all duration-300 px-6 py-2 rounded-xl shadow-[0_0_15px_rgba(74,222,128,0.2)] hover:shadow-[0_0_20px_rgba(74,222,128,0.4)]'>
                     Sign Up
                   </Button>
                 </Link>
@@ -90,7 +111,7 @@ const Navbar = () => {
             mobileMenuOpen ? 'max-h-[400px] opacity-100 scale-100 mt-2' : 'max-h-0 opacity-0 scale-95'
           )}
         >
-          <div className='bg-[#1c1c2b]/95 rounded-xl p-4 shadow-2xl space-y-4'>
+          <div className='bg-[#0f172a]/95 rounded-xl p-4 shadow-2xl space-y-4 border border-slate-700'>
             {['/problems', '/contests'].map((path) => (
               <NavLink
                 key={path}
@@ -130,7 +151,7 @@ const Navbar = () => {
                     </Button>
                   </Link>
                   <Link to='/signup' onClick={() => setMobileMenuOpen(false)}>
-                    <Button className='w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] hover:shadow-[0_0_12px_#00ffa3] transition'>
+                    <Button className='w-full bg-gradient-to-r from-green-400 to-cyan-400 text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] transition-all duration-300'>
                       Sign Up
                     </Button>
                   </Link>

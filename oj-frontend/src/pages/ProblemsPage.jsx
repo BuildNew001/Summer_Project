@@ -32,8 +32,6 @@ const ProblemsPage = () => {
       try {
         setIsLoading(true);
         const data = await fetchProblems();
-
-        // Normalize difficulty to lowercase
         const normalized = data.map((p) => ({
           ...p,
           difficulty: p.difficulty?.toLowerCase() || 'unknown',

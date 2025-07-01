@@ -1,27 +1,45 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import LogoutWrapper from "./LogoutWrapper";
-import { Link } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import {
+  User,
+  Code,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+  Trophy,
+} from "lucide-react";
 
 const getAvatarUrl = (seed) =>
   `https://robohash.org/${encodeURIComponent(seed)}.png?set=set1&size=100x100`;
 
 const UserButton = () => {
-  const { user: authUser } = useAuth();
-  const name = authUser?.UserName || "User";
-  const email = authUser?.email || "user@example.com";
-  const role = authUser?.role || "user";
+  const { user: authUser, logout } = useAuth();
+  const navigate = useNavigate();
+
+  if (!authUser) return null;
+
+  const name = authUser.UserName || "User";
+  const email = authUser.email || "user@example.com";
+  const role = authUser.role || "user";
   const avatarURL = getAvatarUrl(email);
+  const initials = name.slice(0, 2).toUpperCase();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <DropdownMenu>
@@ -33,67 +51,62 @@ const UserButton = () => {
             )}
           >
             <AvatarImage src={avatarURL} alt={name} className="object-cover" />
-            <AvatarFallback className="bg-[#2a2a40] text-white font-bold">
-              {name.charAt(0).toUpperCase()}
+            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-700 text-white font-bold">
+              {initials}
             </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        side="bottom"
         align="end"
-        sideOffset={8}
-        className="z-[100] w-60 rounded-2xl shadow-2xl border border-white/10 bg-[#1e1e2f]/90 backdrop-blur-md text-white animate-in fade-in slide-in-from-top-2 duration-200"
+        className="w-56 z-[100] rounded-xl shadow-2xl border border-white/10 bg-[#1e1e2f]/95 backdrop-blur-md text-slate-200"
       >
-        <div className="px-4 py-3">
-          <p className="text-base font-semibold">{name}</p>
-          <span className="text-xs mt-1 inline-block px-3 py-0.5 rounded-full bg-[#00ffa3]/10 text-[#00ffa3] font-medium capitalize">
-            {role}
-          </span>
-        </div>
+        <DropdownMenuLabel className="font-normal p-2">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none text-white">{name}</p>
+            <p className="text-xs leading-none text-slate-400">{email}</p>
+          </div>
+        </DropdownMenuLabel>
 
         <DropdownMenuSeparator className="bg-white/10" />
 
-        <Link to="/profile">
-          <DropdownMenuItem className="menu-item">
-            👤 View Profile
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link to="/profile" className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </Link>
           </DropdownMenuItem>
-        </Link>
+          <DropdownMenuItem asChild>
+            <Link to="/my-submissions" className="cursor-pointer">
+              <Code className="mr-2 h-4 w-4" />
+              <span>My Submissions</span>
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
 
         {role === "admin" && (
           <>
-            <Link to="/admin/dashboard">
-              <DropdownMenuItem className="menu-item">
-                🛠 Admin Dashboard
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs text-slate-500">Admin</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/problems" className="cursor-pointer"><Settings className="mr-2 h-4 w-4" /><span>Manage Problems</span></Link>
               </DropdownMenuItem>
-            </Link>
-            <Link to="/admin/manage-problems">
-              <DropdownMenuItem className="menu-item">
-                📚 Manage Problems
+              <DropdownMenuItem asChild>
+                <Link to="/admin/contests" className="cursor-pointer"><Trophy className="mr-2 h-4 w-4" /><span>Manage Contests</span></Link>
               </DropdownMenuItem>
-            </Link>
-            <Link to="/admin/manage-contests">
-              <DropdownMenuItem className="menu-item">
-                🧠 Manage Contests
-              </DropdownMenuItem>
-            </Link>
+            </DropdownMenuGroup>
           </>
         )}
 
-        <Link to="/my-submissions">
-          <DropdownMenuItem className="menu-item">
-            📝 My Submissions
-          </DropdownMenuItem>
-        </Link>
-
         <DropdownMenuSeparator className="bg-white/10" />
 
-        <LogoutWrapper>
-          <DropdownMenuItem className="menu-item logout">
-            🚪 Logout
-          </DropdownMenuItem>
-        </LogoutWrapper>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-400">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Logout</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

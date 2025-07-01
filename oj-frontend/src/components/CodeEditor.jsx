@@ -11,8 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import MonacoEditor from '@monaco-editor/react';
-
-// Monaco language map (VSCode language identifiers)
 const languageMap = {
   cpp: 'cpp',
   c: 'c',

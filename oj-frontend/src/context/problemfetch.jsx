@@ -58,6 +58,16 @@ export const fetchMySubmissions = async () => {
   }
 };
 
+export const fetchSubmissionById = async (id) => {
+  try {
+    const response = await api.get(`/submissions/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching submission ${id}:`, error);
+    throw error.response?.data || new Error('Server error');
+  }
+};
+
 export const runCode = async (language, code, input) => {
   try {
     const response = await api.post('/run', {
@@ -68,6 +78,35 @@ export const runCode = async (language, code, input) => {
     return response.data;
   } catch (error) {
     console.error('Error running code:', error);
+    throw error.response?.data || new Error('Server error');
+  }
+};
+
+export const createProblem = async (problemData) => {
+  try {
+    const response = await api.post('/problems', problemData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating problem:', error);
+    throw error.response?.data || new Error('Server error');
+  }
+};
+
+export const updateProblem = async (id, problemData) => {
+  try {
+    const response = await api.put(`/problems/${id}`, problemData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating problem ${id}:`, error);
+    throw error.response?.data || new Error('Server error');
+  }
+};
+
+export const deleteProblem = async (id) => {
+  try {
+    await api.delete(`/problems/${id}`);
+  } catch (error) {
+    console.error(`Error deleting problem ${id}:`, error);
     throw error.response?.data || new Error('Server error');
   }
 };

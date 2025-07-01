@@ -145,3 +145,78 @@
     @apply bg-background text-foreground;
   }
 }
+@keyframes scroll {
+  0% {
+    background-position-y: 0;
+  }
+  100% {
+    background-position-y: -100px;
+  }
+}
+
+.animate-scroll-vertical {
+  animation: scroll 30s linear infinite;
+}
+/* REMOVE ALL OF THIS FROM YOUR CSS FILE */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.glitch-container .glitch {
+  text-shadow: 0.05em 0 0 rgba(0, 255, 255, 0.75),
+    -0.025em -0.05em 0 rgba(255, 0, 255, 0.75),
+    0.025em 0.05em 0 rgba(0, 255, 0, 0.75);
+}
+
+.glitch-container:hover .glitch::before,
+.glitch-container:hover .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0f1e;
+  overflow: hidden;
+  clip-path: inset(50% 50% 50% 50%);
+}
+
+.glitch-container:hover .glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 #ff00ff;
+  animation: glitch-anim-1 1s infinite linear alternate-reverse;
+}
+
+.glitch-container:hover .glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 #00ffff, 2px 2px #ff00ff;
+  animation: glitch-anim-2 1s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+  0% { clip-path: inset(3% 0 94% 0); }
+  25% { clip-path: inset(89% 0 8% 0); }
+  50% { clip-path: inset(45% 0 45% 0); }
+  75% { clip-path: inset(95% 0 3% 0); }
+  100% { clip-path: inset(1% 0 98% 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip-path: inset(80% 0 5% 0); }
+  25% { clip-path: inset(5% 0 90% 0); }
+  50% { clip-path: inset(60% 0 30% 0); }
+  75% { clip-path: inset(90% 0 5% 0); }
+  100% { clip-path: inset(30% 0 60% 0); }
+}

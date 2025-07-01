@@ -12,12 +12,13 @@ import { Loader2 } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/shared/ProtectedRoute' 
 import AdminRoute from './components/shared/AdminRoute'
+import MySubmissionsPage from './pages/MySubmissionsPage';
+import ManageProblemsPage from './pages/ManageProblemsPage';
+
 const ContestsPage = () => <div className='p-8 text-white'>Contests Page (TODO)</div>
-const MySubmissionsPage = () => <div className='p-8 text-white'>My Submissions Page (TODO)</div>
-const AdminDashboardPage = () => <div className='p-8 text-white'>Admin Dashboard (TODO)</div>
-const AdminProblemsPage = () => <div className='p-8 text-white'>Admin Manage Problems (TODO)</div>
-const AdminContestsPage = () => <div className='p-8 text-white'>Admin Manage Contests (TODO)</div>
 const LeaderboardPage = () => <div className='p-8 text-white'>Leaderboard Page (TODO)</div>
+const AdminDashboardPage = () => <div className='p-8 text-white'>Admin Dashboard (TODO)</div>
+const AdminContestsPage = () => <div className='p-8 text-white'>Admin Manage Contests (TODO)</div>
 
 const App = () => {
   const { loading, user: authUser } = useAuth()
@@ -37,9 +38,9 @@ const App = () => {
           {/* Public routes */}
           <Route path='/login' element={<LoginPage />} />
           <Route path='/signup' element={<SignupPage />} />
+          <Route path='/' element={<HomePage />} />
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute />}>
-            <Route path='/' element={<HomePage />} />
             <Route path='/problems' element={<ProblemsPage />} />
             <Route path='/problems/:id' element={<ProblemDetailPage />} />
             <Route path='/contests' element={<ContestsPage />} />
@@ -51,7 +52,7 @@ const App = () => {
           {/* Protected routes for admins only */}
           <Route element={<AdminRoute />}>
             <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
-            <Route path='/admin/problems' element={<AdminProblemsPage />} />
+            <Route path='/admin/problems' element={<ManageProblemsPage />} />
             <Route path='/admin/contests' element={<AdminContestsPage />} />
           </Route>
 
