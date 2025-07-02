@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { runCode } from '../context/problemfetch';
-import { Loader2, PlayCircle, Terminal } from 'lucide-react';
+import { Loader2, PlayCircle, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -16,14 +16,38 @@ const languageMap = {
   c: 'c',
   java: 'java',
   py: 'python',
-  javascript: 'javascript',
 };
 
-const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
+const boilerplate = {
+  cpp: `#include <iostream>
+
+int main() {
+    // Your C++ code here
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}`,
+  c: `#include <stdio.h>
+
+int main() {
+    // Your C code here
+    printf("Hello, World!\\n");
+    return 0;
+}`,
+  java: `public class Main {
+    public static void main(String[] args) {
+        // Your Java code here
+        System.out.println("Hello, World!");
+    }
+}`,
+  py: `# Your Python code here
+print("Hello, World!")`,
+};
+
+const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId }) => {
   const [output, setOutput] = useState('');
   const [customInput, setCustomInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTab, setActiveTab] = useState('editor');
+  const [activeTab, setActiveTab] = useState('input');
 
   const handleRunCode = async () => {
     if (!code.trim()) {
@@ -66,12 +90,18 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
     }
   };
 
+  useEffect(() => {
+    if (onCodeChange && (code === '' || code === null)) {
+      onCodeChange(boilerplate[language] || '');
+    }
+  }, [language, code, onCodeChange]);
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] w-full rounded-2xl border border-[#2f3542] bg-gradient-to-br from-[#0e111a] to-[#1a1f2e] shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
         <div className="flex items-center gap-3">
-          <Terminal className="text-[#00ffa3] w-5 h-5" />
+          <Code className="text-[#00ffa3] w-5 h-5" />
           <Select value={language} onValueChange={onLanguageChange}>
             <SelectTrigger className="w-36 h-8 bg-[#21262d] border border-[#30363d] text-white text-sm">
               <SelectValue placeholder="Language" />
@@ -81,7 +111,6 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
               <SelectItem value="cpp">C++</SelectItem>
               <SelectItem value="java">Java</SelectItem>
               <SelectItem value="py">Python</SelectItem>
-              <SelectItem value="javascript">JavaScript</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -96,24 +125,10 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-[#0f1117] text-sm text-white border-b border-[#30363d]">
-        {['editor', 'input', 'output'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 transition-all duration-200 border-b-2 font-semibold uppercase tracking-wide text-xs sm:text-sm md:text-base lg:text-sm xl:text-base ${
-              activeTab === tab ? 'border-[#00ffa3] text-[#00ffa3]' : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Panels */}
-      <div className="flex-grow bg-[#0e111a]">
-        {activeTab === 'editor' && (
+      {/* Main Content Area */}
+      <div className="flex flex-row flex-grow overflow-hidden">
+        {/* Left Panel: Editor */}
+        <div className="w-3/5 h-full">
           <MonacoEditor
             height="100%"
             language={languageMap[language] || 'plaintext'}
@@ -121,47 +136,67 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange }) => {
             onChange={(value) => onCodeChange(value)}
             theme="vs-dark"
             options={{
-              fontSize: 14,
+              fontSize: 15,
               fontFamily: 'Fira Code, monospace',
               fontLigatures: true,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
               wordWrap: 'on',
-              tabSize: 2,
+              tabSize: 4,
               automaticLayout: true,
               padding: { top: 12, bottom: 12 },
               lineNumbers: 'on',
               roundedSelection: false,
               cursorSmoothCaretAnimation: true,
               scrollbar: {
-                verticalScrollbarSize: 5,
-                horizontalScrollbarSize: 5,
+                verticalScrollbarSize: 6,
+                horizontalScrollbarSize: 6,
               },
             }}
           />
-        )}
+        </div>
 
-        {activeTab === 'input' && (
-          <div className="p-6">
-            <div className="text-sm font-bold text-blue-400 mb-2">CUSTOM INPUT</div>
-            <textarea
-              rows={8}
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              className="w-full h-full bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 border border-[#2f3542] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Enter input for your program here..."
-            />
+        {/* Right Panel: Input/Output */}
+        <div className="w-2/5 h-full flex flex-col border-l border-[#30363d]">
+          {/* Tabs for Input/Output */}
+          <div className="flex-shrink-0 flex bg-[#0f1117] text-sm text-white border-b border-[#30363d]">
+            {['input', 'output'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 transition-all duration-200 border-b-2 font-semibold uppercase tracking-wide text-xs ${
+                  activeTab === tab ? 'border-[#00ffa3] text-[#00ffa3]' : 'border-transparent text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-        )}
 
-        {activeTab === 'output' && (
-          <div className="p-6">
-            <div className="text-sm font-bold text-[#00ffa3] mb-2">OUTPUT</div>
-            <div className="bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 whitespace-pre-wrap break-words leading-relaxed border border-[#2f3542] shadow-inner min-h-[120px]">
-              {output || '// Click "Run Code" to see output.'}
-            </div>
+          {/* Tab Content */}
+          <div className="flex-grow overflow-y-auto bg-[#0e111a]">
+            {activeTab === 'input' && (
+              <div className="p-4 h-full">
+                <label className="text-sm font-bold text-blue-400 mb-2 block">CUSTOM INPUT</label>
+                <textarea
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  className="w-full h-[calc(100%-24px)] bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 border border-[#2f3542] focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Enter input for your program here..."
+                />
+              </div>
+            )}
+
+            {activeTab === 'output' && (
+              <div className="p-4">
+                <div className="text-sm font-bold text-[#00ffa3] mb-2">OUTPUT</div>
+                <div className="bg-[#1a1d25] text-white text-sm font-mono rounded-md p-3 whitespace-pre-wrap break-words leading-relaxed border border-[#2f3542] shadow-inner min-h-[100px]">
+                  {output || '// Click "Run Code" to see output.'}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -15,10 +15,10 @@ const FormSelect = (props) => (
     <select {...props} className="w-full bg-slate-800 border border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition text-slate-200" />
 );
 const EditProblemModal = ({ problem, onClose, onSave }) => {
-    const [formData, setFormData] = useState(problem);
+    const [formData, setFormData] = useState({ ...problem, testCases: problem?.testCases || [] });
 
     useEffect(() => {
-        setFormData(problem);
+        setFormData({ ...problem, testCases: problem?.testCases || [] });
     }, [problem]);
 
     const handleChange = (e) => {
@@ -88,7 +88,7 @@ const EditProblemModal = ({ problem, onClose, onSave }) => {
                         <Button type="button" variant="ghost" onClick={onClose} className="text-slate-300 hover:bg-slate-700 hover:text-white">
                             Cancel
                         </Button>
-                        <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110">
+                        <Button type="submit" className="bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold hover:brightness-110">
                             Save Changes
                         </Button>
                     </div>
@@ -154,7 +154,7 @@ const ManageProblemsPage = () => {
             await createProblem(newProblem);
             setNewProblem({ title: '', description: '', difficulty: 'Easy', testCases: [{ input: '', output: '' }] });
             setCreateFormVisible(false);
-            loadProblems(); // Refresh the list
+            loadProblems(); 
         } catch (err) {
             setError('Failed to create problem.');
         }
@@ -197,10 +197,10 @@ const ManageProblemsPage = () => {
         <div className="min-h-screen bg-[#0a0f1e] text-slate-200 p-4 sm:p-6 lg:p-8">
         <div className="container mx-auto">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400 animate-gradient">
+                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] animate-gradient">
                     Manage Problems
                 </h1>
-                <Button onClick={() => setCreateFormVisible(!isCreateFormVisible)} className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:scale-105 transition">
+                <Button onClick={() => setCreateFormVisible(!isCreateFormVisible)} className="bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold hover:scale-105 transition hover:shadow-lg hover:shadow-cyan-500/20">
                     {isCreateFormVisible ? <><X className="h-4 w-4 mr-2" />Cancel</> : <><Plus className="h-4 w-4 mr-2" />Add Problem</>}
                 </Button>
             </div>
@@ -235,7 +235,7 @@ const ManageProblemsPage = () => {
                         </Button>
 
                         <div className="flex justify-end mt-8">
-                            <Button type="submit" className="bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold hover:brightness-110">
+                            <Button type="submit" className="bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold hover:brightness-110">
                                 Create Problem
                             </Button>
                         </div>

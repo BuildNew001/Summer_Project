@@ -22,7 +22,11 @@ exports.createProblem = asyncHandler(async (req, res) => {
 });
 
 exports.getAllProblems = asyncHandler(async (req, res) => {
-    const problems = await Problem.find().populate('author', 'UserName fullname'); 
+    const problems = await Problem.find()
+        .select('-sampleTestCases')
+        .populate('author', 'UserName fullname')
+        .lean();
+        
     res.status(200).json({
         success: true,
         count: problems.length,
@@ -31,11 +35,15 @@ exports.getAllProblems = asyncHandler(async (req, res) => {
 });
 
 exports.getProblemById = asyncHandler(async (req, res) => {
-    const problem = await Problem.findById(req.params.id).populate('author', 'UserName fullname');
+    const problem = await Problem.findById(req.params.id).populate('author', 'UserName fullname').lean();
     if (!problem) {
         res.status(404);
         throw new Error('Problem not found');
     }
+    if (problem.sampleTestCases && Array.isArray(problem.sampleTestCases)) {
+        problem.sampleTestCases = problem.sampleTestCases.slice(0, 3);
+    }
+
     res.status(200).json({
         success: true,
         data: problem
@@ -72,8 +80,10 @@ exports.getFeaturedProblems = asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 3;
     const problems = await Problem.find({ isFeatured: true })
         .sort({ createdAt: -1 }) 
+        .select('-sampleTestCases')
         .populate('author', 'UserName fullname')
-        .limit(limit);
+        .limit(limit)
+        .lean();
 
     res.status(200).json({
         success: true,

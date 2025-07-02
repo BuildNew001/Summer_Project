@@ -12,7 +12,7 @@ const NavItem = ({ to, children }) => (
     className={({ isActive }) =>
       cn(
         'relative group text-base font-medium px-1 py-2 transition-colors duration-300',
-        isActive ? 'text-cyan-300' : 'text-white/80 hover:text-white'
+        isActive ? 'text-[#00ffa3]' : 'text-slate-300 hover:text-white'
       )
     }
   >
@@ -21,14 +21,14 @@ const NavItem = ({ to, children }) => (
         {children}
         <span
           className={cn(
-            'absolute bottom-0 left-0 block h-0.5 bg-gradient-to-r from-cyan-400 to-green-400 transition-all duration-300',
+            'absolute bottom-0 left-0 block h-0.5 bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] transition-all duration-300',
             isActive ? 'w-full' : 'w-0 group-hover:w-full'
           )}
         />
       </>
     )}
   </NavLink>
-);
+)
 
 const Navbar = () => {
   const { user: authUser } = useAuth()
@@ -47,7 +47,9 @@ const Navbar = () => {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 backdrop-blur-lg transition-all duration-300 ease-in-out',
-        scrolled ? 'bg-[#0a0f1e]/80 border-b border-slate-700 shadow-lg' : 'bg-transparent border-b border-transparent'
+        scrolled
+          ? 'bg-[#0f172a]/80 border-b border-slate-800 shadow-lg shadow-black/20'
+          : 'border-b border-transparent'
       )}
     >
       <div className='container mx-auto px-5'>
@@ -56,10 +58,10 @@ const Navbar = () => {
           {/* Logo */}
           <Link
             to='/'
-            className='flex items-center space-x-3 group px-3 py-1 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-white/10'
+            className='flex items-center space-x-3 group px-3 py-1 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-white/5'
           >
-            <TerminalSquare className='h-8 w-8 text-cyan-400 group-hover:text-green-400 group-hover:rotate-[8deg] transition-all duration-300' />
-            <span className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-cyan-400 group-hover:brightness-125'>
+            <TerminalSquare className='h-8 w-8 text-[#00d4ff] group-hover:text-[#00ffa3] group-hover:rotate-[8deg] transition-all duration-300' />
+            <span className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] group-hover:brightness-125'>
               Online Judge
             </span>
           </Link>
@@ -89,13 +91,13 @@ const Navbar = () => {
                 <Link to='/login'>
                   <Button
                     variant='ghost'
-                    className='text-white/80 hover:text-cyan-300 hover:bg-white/5 transition duration-300'
+                    className='text-slate-300 hover:text-white hover:bg-white/10 transition duration-300'
                   >
                     Login
                   </Button>
                 </Link>
                 <Link to='/signup'>
-                  <Button className='bg-gradient-to-r from-green-400 to-cyan-400 text-black font-semibold hover:scale-105 transition-all duration-300 px-6 py-2 rounded-xl shadow-[0_0_15px_rgba(74,222,128,0.2)] hover:shadow-[0_0_20px_rgba(74,222,128,0.4)]'>
+                  <Button className='bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-semibold hover:scale-105 transition-all duration-300 px-6 py-2 rounded-xl shadow-[0_0_15px_rgba(0,255,163,0.2)] hover:shadow-[0_0_20px_rgba(0,255,163,0.4)]'>
                     Sign Up
                   </Button>
                 </Link>
@@ -104,14 +106,14 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Slide-down */}
+        {/* Mobile Menu */}
         <div
           className={cn(
             'overflow-hidden md:hidden transition-all duration-500 ease-in-out',
             mobileMenuOpen ? 'max-h-[400px] opacity-100 scale-100 mt-2' : 'max-h-0 opacity-0 scale-95'
           )}
         >
-          <div className='bg-[#0f172a]/95 rounded-xl p-4 shadow-2xl space-y-4 border border-slate-700'>
+          <div className='bg-[#111827]/95 backdrop-blur-sm rounded-xl p-4 shadow-2xl space-y-2 border border-slate-700/80'>
             {['/problems', '/contests'].map((path) => (
               <NavLink
                 key={path}
@@ -119,8 +121,8 @@ const Navbar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   cn(
-                    'block text-lg font-medium px-4 py-2 rounded-lg hover:bg-white/10 hover:text-[#00ffa3] transition',
-                    isActive ? 'text-[#00ffa3]' : 'text-white/80'
+                    'block text-lg font-medium px-4 py-3 rounded-lg hover:bg-white/5 transition-colors duration-200',
+                    isActive ? 'bg-white/5 text-[#00ffa3]' : 'text-slate-300 hover:text-white'
                   )
                 }
               >
@@ -133,7 +135,7 @@ const Navbar = () => {
               <div className='absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent' />
             </div>
 
-            {/* Auth on Mobile */}
+            {/* Mobile Auth */}
             <div className='pt-4 space-y-2'>
               {authUser ? (
                 <div className='flex items-center justify-between px-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition'>
@@ -145,13 +147,13 @@ const Navbar = () => {
                   <Link to='/login' onClick={() => setMobileMenuOpen(false)}>
                     <Button
                       variant='ghost'
-                      className='w-full text-white hover:text-[#00ffa3] hover:bg-white/10 transition'
+                      className='w-full text-slate-300 hover:text-white hover:bg-white/10 transition text-lg py-3 h-auto'
                     >
                       Login
                     </Button>
                   </Link>
                   <Link to='/signup' onClick={() => setMobileMenuOpen(false)}>
-                    <Button className='w-full bg-gradient-to-r from-green-400 to-cyan-400 text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] transition-all duration-300'>
+                    <Button className='w-full bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] text-black font-bold px-6 py-2 rounded-xl hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(0,255,163,0.4)] transition-all duration-300'>
                       Sign Up
                     </Button>
                   </Link>

@@ -12,7 +12,6 @@ const LogoutWrapper = ({children}) => {
   return (
     <Button variant="ghost" onClick={onLogout} className={"w-full"}>
       {children}
-
     </Button>
   )
 }
