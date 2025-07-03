@@ -7,7 +7,7 @@ const processSubmission = async (submissionId, code, language, problemId) => {
     let verdict = '';
     let finalOutput = '';
 
-    for (const testCase of problem.sampleTestCases) {
+    for (const [index,testCase] of problem.sampleTestCases.entries()) {
         const { input, expectedOutput } = testCase;
         const { output, error } = await executeCode(language, code, input || '');
         if (error) {
@@ -20,7 +20,7 @@ const processSubmission = async (submissionId, code, language, problemId) => {
         const normalizedExpected = (expectedOutput || '').trim().replace(/\r\n/g, '\n');
         if (normalizedOutput !== normalizedExpected) {
             allPassed = false;
-            verdict = 'Wrong Answer';
+            verdict = `Wrong Answer on test case ${index + 1}`;
             finalOutput = `Input:\n${input}\n\nExpected:\n${normalizedExpected}\n\nGot:\n${normalizedOutput}`;
             break; 
         }

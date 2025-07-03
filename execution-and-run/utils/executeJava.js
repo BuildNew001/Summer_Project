@@ -40,6 +40,10 @@ const executeJava = (filepath, inputPath) => {
         }
         reject(new Error(`Runtime Error: ${err.message}`))
       })
+
+      runProcess.stdin.on('error', (err) => {
+        if (err.code !== 'EPIPE') { console.error('stdin error:', err); }
+      });
       const inputStream = fs.createReadStream(inputPath)
       inputStream.pipe(runProcess.stdin)
     })

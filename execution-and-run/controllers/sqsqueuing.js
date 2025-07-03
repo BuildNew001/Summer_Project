@@ -75,14 +75,16 @@ const processMessage = async (message) => {
 
   } catch (processingError) {
     console.error(`Error processing submission ${submissionId}:`, processingError);
-    await Submission.findByIdAndUpdate(submissionId, {
-      status: 'Error',
-      output: 'Internal error during code processing.',
-      error: processingError.message || 'Unknown error',
-    }).catch(err =>
-      console.error(`Failed to update submission ${submissionId} after error:`, err)
-    );
-    await deleteMessageFromQueue(message.ReceiptHandle);
+    try {
+      await Submission.findByIdAndUpdate(submissionId, {
+        status: 'Error',
+        output: 'Internal error during code processing.',
+        error: processingError.message || 'Unknown error',
+      });
+      await deleteMessageFromQueue(message.ReceiptHandle);
+    } catch (updateError) {
+      console.error(`Failed to update submission ${submissionId} after processing error. Will not delete message, allowing for retry.`, updateError);
+    }
   } finally {
     if (visibilityExtender) {
       clearInterval(visibilityExtender);

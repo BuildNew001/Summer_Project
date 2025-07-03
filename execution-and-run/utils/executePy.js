@@ -32,6 +32,12 @@ const executePy = (filepath, inputPath) => {
       reject(new Error(`Runtime Error: ${err.message}`))
     })
 
+    pyProcess.stdin.on('error', (err) => {
+      // This can happen if the process exits before stdin is fully written.
+      // We can ignore EPIPE, but should probably log other errors.
+      if (err.code !== 'EPIPE') { console.error('stdin error:', err); }
+    });
+
     const inputStream = fs.createReadStream(inputPath)
     inputStream.pipe(pyProcess.stdin)
   })

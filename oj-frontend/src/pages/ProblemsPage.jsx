@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ const difficultyColorMap = {
 
 const ProblemsPage = () => {
   const [problems, setProblems] = useState([]);
-  const [filteredProblems, setFilteredProblems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -38,7 +37,6 @@ const ProblemsPage = () => {
         }));
 
         setProblems(normalized);
-        setFilteredProblems(normalized);
         setError(null);
       } catch (err) {
         setError(err.message || 'Failed to fetch problems. Please try again later.');
@@ -51,22 +49,21 @@ const ProblemsPage = () => {
     getProblems();
   }, []);
 
-  useEffect(() => {
+  const filteredProblems = useMemo(() => {
     let filtered = problems;
 
-    if (search) {
+    const trimmedSearch = search.trim().toLowerCase();
+    if (trimmedSearch) {
       filtered = filtered.filter((p) =>
-        p.title.toLowerCase().includes(search.toLowerCase())
+        p.title.toLowerCase().includes(trimmedSearch)
       );
     }
 
     if (difficultyFilter !== 'all') {
-      filtered = filtered.filter(
-        (p) => p.difficulty?.toLowerCase() === difficultyFilter.toLowerCase()
-      );
+      filtered = filtered.filter((p) => p.difficulty === difficultyFilter);
     }
 
-    setFilteredProblems(filtered);
+    return filtered;
   }, [search, difficultyFilter, problems]);
 
   return (

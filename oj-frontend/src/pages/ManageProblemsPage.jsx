@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProblems, createProblem, deleteProblem, updateProblem } from '../context/problemfetch';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Plus, Trash2, Edit, X } from 'lucide-react';
 
@@ -100,6 +101,7 @@ const EditProblemModal = ({ problem, onClose, onSave }) => {
 
 
 const ManageProblemsPage = () => {
+    const { user } = useAuth();
     const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -116,7 +118,11 @@ const ManageProblemsPage = () => {
         try {
             setLoading(true);
             const data = await fetchProblems();
-            setProblems(data);
+            if (user && user.role === 'setter') {
+                setProblems(data.filter(p => p.author?._id === user._id));
+            } else {
+                setProblems(data);
+            }
         } catch (err) {
             setError('Failed to fetch problems.');
         } finally {
@@ -126,7 +132,7 @@ const ManageProblemsPage = () => {
 
     useEffect(() => {
         loadProblems();
-    }, []);
+    }, [user]); 
 
     const handleNewProblemChange = (e) => {
         const { name, value } = e.target;

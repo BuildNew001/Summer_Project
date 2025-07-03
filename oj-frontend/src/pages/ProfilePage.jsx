@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 const getAvatarUrl = (seed) =>
-  `https://robohash.org/ ${encodeURIComponent(seed)}.png?set=set1&size=200x200`;
+  `https://robohash.org/${encodeURIComponent(seed)}.png?set=set1&size=200x200`;
 
 const ProfilePage = () => {
   const { user, loading: authLoading } = useAuth();

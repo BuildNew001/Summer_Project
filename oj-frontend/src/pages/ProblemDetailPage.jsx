@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, ArrowLeft, BadgeCheck } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { fetchProblemById, submitCode } from '../context/problemfetch';
 import CodeEditor from '../components/CodeEditor';
+import { toast } from 'sonner';
 
 const difficultyColorMap = {
   Easy: 'bg-emerald-500',
@@ -14,13 +15,13 @@ const difficultyColorMap = {
 
 const ProblemDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [problem, setProblem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('cpp');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState(null);
 
   useEffect(() => {
     const getProblem = async () => {
@@ -43,14 +44,13 @@ const ProblemDetailPage = () => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setSubmissionResult(null);
     try {
-      const result = await submitCode({ problemId: id, language, code });
-      setSubmissionResult(result);
+      await submitCode({ problemId: id, language, code });
+      toast.success('Solution submitted successfully! Redirecting...');
+      navigate('/my-submissions');
     } catch (err) {
       const errorMessage = err.message || 'Failed to submit solution.';
-      setSubmissionResult({ status: 'Error', message: errorMessage });
-    } finally {
+      toast.error(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -151,21 +151,6 @@ const ProblemDetailPage = () => {
             code={code}
             onCodeChange={setCode}
           />
-
-          {submissionResult && (
-            <div
-              className={`text-sm font-semibold px-5 py-3 rounded-lg transition-all duration-300 shadow-md border-l-4 flex items-center gap-3 max-w-full overflow-auto whitespace-pre-wrap text-wrap break-words ${
-                submissionResult.status === 'Accepted'
-                  ? 'text-green-400 bg-green-600/10 border-green-500'
-                  : 'text-red-400 bg-red-600/10 border-red-500'
-              }`}
-            >
-              <BadgeCheck className="w-5 h-5 shrink-0" />
-              <span>
-                Submission Status: {submissionResult.status} - {submissionResult.message}
-              </span>
-            </div>
-          )}
 
           <Button
             onClick={handleSubmit}

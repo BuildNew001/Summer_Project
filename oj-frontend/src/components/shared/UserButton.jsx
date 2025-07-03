@@ -14,7 +14,6 @@ import {
 import { cn } from "../../lib/utils";
 import {
   User,
-  Code,
   Settings,
   LogOut,
   LayoutDashboard,
@@ -35,6 +34,9 @@ const UserButton = () => {
   const role = authUser.role || "user";
   const avatarURL = getAvatarUrl(email);
   const initials = name.slice(0, 2).toUpperCase();
+
+  const canManageProblems = role === 'admin' || role === 'setter';
+  const isAdmin = role === 'admin';
 
   const handleLogout = async () => {
     await logout();
@@ -80,23 +82,23 @@ const UserButton = () => {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/my-submissions" className="cursor-pointer">
-              <Code className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 h-4 w-4" />
               <span>My Submissions</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
-        {role === "admin" && (
+        {(canManageProblems || isAdmin) && (
           <>
             <DropdownMenuSeparator className="bg-white/10" />
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-xs text-slate-500">Admin</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link to="/admin/problems" className="cursor-pointer"><Settings className="mr-2 h-4 w-4" /><span>Manage Problems</span></Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/admin/contests" className="cursor-pointer"><Trophy className="mr-2 h-4 w-4" /><span>Manage Contests</span></Link>
-              </DropdownMenuItem>
+              <DropdownMenuLabel className="text-xs text-slate-500">{role}</DropdownMenuLabel>
+              {canManageProblems && (
+                <DropdownMenuItem asChild><Link to="/admin/problems" className="cursor-pointer"><LayoutDashboard className="mr-2 h-4 w-4" /><span>Manage Problems</span></Link></DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <DropdownMenuItem asChild><Link to="/admin/contests" className="cursor-pointer"><Trophy className="mr-2 h-4 w-4" /><span>Manage Contests</span></Link></DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
           </>
         )}
