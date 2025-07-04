@@ -1,11 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Sparkles, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { fetchProblemById, submitCode } from '../context/problemfetch';
+import { fetchProblemById, submitCode, getAIReview } from '../context/problemfetch';
 import CodeEditor from '../components/CodeEditor';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+
+// Boilerplate code per language
+const boilerplate = {
+  cpp: `#include <iostream>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}`,
+  c: `#include <stdio.h>
+
+int main() {
+    printf("Hello, World!\\n");
+    return 0;
+}`,
+  java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}`,
+  py: `# Your Python code here
+print("Hello, World!")`,
+};
 
 const difficultyColorMap = {
   Easy: 'bg-emerald-500',
@@ -13,25 +37,54 @@ const difficultyColorMap = {
   Hard: 'bg-rose-500',
 };
 
+const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-[#111827] rounded-2xl p-8 shadow-2xl border border-cyan-700 max-w-3xl w-full relative max-h-[90vh] flex flex-col">
+        <Button onClick={onClose} className="absolute top-3 right-3 text-slate-400 hover:text-black" variant="ghost" size="icon">
+          <X className="h-5 w-5" />
+        </Button>
+        <h2 className="text-2xl font-bold mb-4 text-cyan-400 flex items-center gap-2">
+          <Sparkles className="h-6 w-6" />
+          <span>AI For Edge Case</span>
+        </h2>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center flex-grow min-h-[200px]">
+            <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />
+            <p className="mt-4 text-slate-300">Analyzing your code... This may take a moment.</p>
+          </div>
+        ) : (
+          <div className="prose prose-invert max-w-none text-slate-300 overflow-y-auto pr-4">
+            <ReactMarkdown>{reviewContent}</ReactMarkdown>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ProblemDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [problem, setProblem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('cpp');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [language, setLanguage] = useState('cpp');
+  const [code, setCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiReviewing, setIsAiReviewing] = useState(false);
+  const [aiReviewContent, setAiReviewContent] = useState('');
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   useEffect(() => {
     const getProblem = async () => {
       try {
         setIsLoading(true);
         const data = await fetchProblemById(id);
-        const initialLanguage = 'cpp';
         setProblem(data);
-        setLanguage(initialLanguage);
-        setCode(data.defaultCode?.[initialLanguage] || '');
         setError(null);
       } catch (err) {
         setError(err.message || 'Failed to fetch problem details.');
@@ -39,19 +92,52 @@ const ProblemDetailPage = () => {
         setIsLoading(false);
       }
     };
+
     getProblem();
   }, [id]);
+
+  useEffect(() => {
+    if (!problem) return;
+
+    const savedCode = localStorage.getItem(`code-${id}-${language}`);
+    if (savedCode) {
+      setCode(savedCode);
+      return;
+    }
+
+    const defaultCode = problem.defaultCode?.[language];
+    setCode(defaultCode && defaultCode.trim() ? defaultCode : boilerplate[language]);
+  }, [id, language, problem]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      localStorage.setItem(`code-${id}-${language}`, code);
       await submitCode({ problemId: id, language, code });
       toast.success('Solution submitted successfully! Redirecting...');
       navigate('/my-submissions');
     } catch (err) {
-      const errorMessage = err.message || 'Failed to submit solution.';
-      toast.error(errorMessage);
+      toast.error(err.message || 'Failed to submit solution.');
       setIsSubmitting(false);
+    }
+  };
+
+  const handleAiReview = async () => {
+    if (!code.trim()) {
+      toast.warning('Please write some code to review.');
+      return;
+    }
+    setIsAiReviewing(true);
+    setIsAiModalOpen(true);
+    setAiReviewContent('');
+    try {
+      const result = await getAIReview({ problemId: id, code });
+      setAiReviewContent(result.review);
+    } catch (err) {
+      toast.error(err.message || 'An error occurred during AI review.');
+      setAiReviewContent('Could not retrieve AI review. Please try again.');
+    } finally {
+      setIsAiReviewing(false);
     }
   };
 
@@ -80,6 +166,12 @@ const ProblemDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] to-[#111b30] text-white font-sans px-6 py-10 animate-fade-in-up">
+      <AIReviewModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        isLoading={isAiReviewing}
+        reviewContent={aiReviewContent}
+      />
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         {/* Problem Description */}
         <div className="bg-[#111827] rounded-3xl p-8 shadow-[0_0_40px_rgba(0,255,255,0.1)] border border-cyan-900 overflow-auto">
@@ -91,10 +183,14 @@ const ProblemDetailPage = () => {
             <h1 className="text-4xl font-extrabold text-white drop-shadow-md tracking-tight">
               {problem.title}
             </h1>
-            <Badge className={`text-white px-3 py-1 rounded-xl text-sm ${difficultyColorMap[problem.difficulty]}`}>{problem.difficulty}</Badge>
+            <Badge className={`text-white px-3 py-1 rounded-xl text-sm ${difficultyColorMap[problem.difficulty]}`}>
+              {problem.difficulty}
+            </Badge>
           </div>
 
-          <div className="prose prose-invert text-slate-300 mb-6 max-w-none prose-p:leading-relaxed prose-p:my-2" dangerouslySetInnerHTML={{ __html: problem.description?.replace(/\n/g, '<br/>') }} />
+          <div className="prose prose-invert text-slate-300 mb-6 max-w-none prose-p:leading-relaxed prose-p:my-2">
+            <ReactMarkdown>{problem.description}</ReactMarkdown>
+          </div>
 
           {problem.examples?.length > 0 && (
             <div className="mt-6">
@@ -107,7 +203,12 @@ const ProblemDetailPage = () => {
                       <strong>Input:</strong> {ex.input}
                       <br />
                       <strong>Output:</strong> {ex.output}
-                      {ex.explanation && <><br /><strong>Explanation:</strong> {ex.explanation}</>}
+                      {ex.explanation && (
+                        <>
+                          <br />
+                          <strong>Explanation:</strong> {ex.explanation}
+                        </>
+                      )}
                     </pre>
                   </div>
                 ))}
@@ -143,7 +244,7 @@ const ProblemDetailPage = () => {
           )}
         </div>
 
-        {/* Code Editor + Submit Button */}
+        {/* Code Editor */}
         <div className="flex flex-col gap-6 bg-[#111827] rounded-3xl p-6 border border-[#2f3542] shadow-2xl">
           <CodeEditor
             language={language}
@@ -152,19 +253,34 @@ const ProblemDetailPage = () => {
             onCodeChange={setCode}
           />
 
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !code.trim()}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl w-full"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-              </>
-            ) : (
-              'Submit Solution'
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            <Button
+              onClick={handleAiReview}
+              disabled={isAiReviewing || isSubmitting || !code.trim()}
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl"
+            >
+              {isAiReviewing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Getting Review...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" /> AI For Edge Case
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || isAiReviewing || !code.trim()}
+              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl"
+            >
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+              ) : (
+                'Submit Solution'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

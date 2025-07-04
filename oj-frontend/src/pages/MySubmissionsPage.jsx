@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 import {
   fetchMySubmissions,
-  fetchSubmissionById,
 } from "../context/problemfetch";
 import { Button } from "../components/ui/button";
 
@@ -92,6 +92,8 @@ const MySubmissionsPage = () => {
     return "text-red-400"; 
   };
 
+  const visibleSubmissions = submissions.filter((sub) => sub.problem);
+
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-slate-200 p-4 sm:p-6 lg:p-8">
       <div className="container mx-auto">
@@ -99,7 +101,7 @@ const MySubmissionsPage = () => {
           My Submissions
         </h1>
       </div>
-      {submissions.length === 0 ? (
+      {visibleSubmissions.length === 0 ? (
         <div className="text-center bg-slate-900/50 border border-slate-700 rounded-xl p-12 max-w-2xl mx-auto">
           <p className="text-xl text-slate-400 mb-6">
             You have no submissions yet.
@@ -130,7 +132,7 @@ const MySubmissionsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {submissions.map((sub) => (
+              {visibleSubmissions.map((sub) => (
                 <tr
                   key={sub._id}
                   className="hover:bg-slate-800/40 transition-colors duration-200"
@@ -152,7 +154,9 @@ const MySubmissionsPage = () => {
                     {sub.status || "Processing..."}
                   </td>
                   <td className="py-4 px-6 text-slate-400">
-                    {new Date(sub.createdAt).toLocaleString()}
+                    {formatDistanceToNow(new Date(sub.createdAt), {
+                      addSuffix: true,
+                    })}
                   </td>
                 </tr>
               ))}

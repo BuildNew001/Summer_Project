@@ -13,7 +13,7 @@ const sqsClient = new SQSClient({
 });
 
 const createSubmission = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const {problemId, code, language} = req.body;
 
     const problem = await Problem.findById(problemId).lean();
@@ -60,24 +60,32 @@ const createSubmission = asyncHandler(async (req, res) => {
 
 const getSubmissionById = asyncHandler(async (req, res) => {
     const { submissionId } = req.params;
-    const submission = await Submission.findById(submissionId)
-        .populate('userId', 'UserName email') 
-        .populate('problemId', 'title');     
+    const { _id: userId, role } = req.user;
+
+    console.log(`User ${userId} (role: ${role}) is requesting submission ${submissionId}`);
+
+    const query = { _id: submissionId };
+    if (role !== 'admin' && role !== 'setter') {
+        query.userId = userId;
+    }
+
+    const submission = await Submission.findOne(query)
+        .populate('userId', 'UserName email')
+        .populate('problemId', 'title');
 
     if (!submission) {
         res.status(404);
-        throw new Error('Submission not found');
-    }
-    if (submission.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-        res.status(403);
-        throw new Error('User not authorized to view this submission');
+        throw new Error('Submission not found or you are not authorized to view it');
     }
 
     res.status(200).json({ success: true, data: submission });
 });
 
 const getSubmissionsForUser = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id;
+
+    console.log(`Fetching all submissions for user ID: ${userId}`);
+
     const submissions = await Submission.find({ userId })
         .sort({ createdAt: -1 })
         .populate('problemId', 'title difficulty _id')

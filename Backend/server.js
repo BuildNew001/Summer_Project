@@ -21,6 +21,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/problems', require('./routes/problemRoutes')); 
 app.use('/api/submissions', require('./routes/submissionRoutes'));
 app.use('/api/run', require('./routes/runRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 5000;

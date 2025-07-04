@@ -110,3 +110,13 @@ export const deleteProblem = async (id) => {
     throw error.response?.data || new Error('Server error');
   }
 };
+
+export const getAIReview = async ({ problemId, code }) => {
+  try {
+    const response = await api.post('/ai', { problemId, code });
+    return response.data;
+  } catch (error) {
+    console.error('Error getting AI review:', error);
+    throw error.response?.data || new Error('Server error');
+  }
+};

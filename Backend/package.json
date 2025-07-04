@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.616.0",
+    "@google/generative-ai": "^0.24.1",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",

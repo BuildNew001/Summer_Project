@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { runCode } from '../context/problemfetch';
 import { Loader2, PlayCircle, Code } from 'lucide-react';
@@ -11,36 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import MonacoEditor from '@monaco-editor/react';
+
 const languageMap = {
   cpp: 'cpp',
   c: 'c',
   java: 'java',
   py: 'python',
-};
-
-const boilerplate = {
-  cpp: `#include <iostream>
-
-int main() {
-    // Your C++ code here
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
-}`,
-  c: `#include <stdio.h>
-
-int main() {
-    // Your C code here
-    printf("Hello, World!\\n");
-    return 0;
-}`,
-  java: `public class Main {
-    public static void main(String[] args) {
-        // Your Java code here
-        System.out.println("Hello, World!");
-    }
-}`,
-  py: `# Your Python code here
-print("Hello, World!")`,
 };
 
 const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId }) => {
@@ -90,15 +67,8 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId 
     }
   };
 
-  useEffect(() => {
-    if (onCodeChange && (code === '' || code === null)) {
-      onCodeChange(boilerplate[language] || '');
-    }
-  }, [language, code, onCodeChange]);
-
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] w-full rounded-2xl border border-[#2f3542] bg-gradient-to-br from-[#0e111a] to-[#1a1f2e] shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
-      {/* Header */}
       <div className="flex justify-between items-center px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
         <div className="flex items-center gap-3">
           <Code className="text-[#00ffa3] w-5 h-5" />
@@ -125,9 +95,7 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId 
         </Button>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex flex-row flex-grow overflow-hidden">
-        {/* Left Panel: Editor */}
         <div className="w-3/5 h-full">
           <MonacoEditor
             height="100%"
@@ -156,9 +124,7 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId 
           />
         </div>
 
-        {/* Right Panel: Input/Output */}
         <div className="w-2/5 h-full flex flex-col border-l border-[#30363d]">
-          {/* Tabs for Input/Output */}
           <div className="flex-shrink-0 flex bg-[#0f1117] text-sm text-white border-b border-[#30363d]">
             {['input', 'output'].map((tab) => (
               <button
@@ -173,7 +139,6 @@ const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId 
             ))}
           </div>
 
-          {/* Tab Content */}
           <div className="flex-grow overflow-y-auto bg-[#0e111a]">
             {activeTab === 'input' && (
               <div className="p-4 h-full">
