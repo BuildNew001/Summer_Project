@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Trophy, BookOpen, Code, ArrowRight } from 'lucide-react';
 import { useFeaturedProblems } from '../hooks/useFeaturedProblems';
 import Footer from '../components/shared/Footer';
+import { useAuth } from '../context/AuthContext';
 
 const DEFAULT_OJ_LOGO_URL = '/logo-normal.png';
 const HOVER_OJ_LOGO_URL = '/logo-hover.png';
@@ -12,6 +13,7 @@ const HOVER_OJ_LOGO_URL = '/logo-hover.png';
 const Home = () => {
   const { problems: featuredProblems, isLoading, error } = useFeaturedProblems(3);
   const [isHovering, setIsHovering] = useState(false);
+  const { user } = useAuth();
 
   const SkeletonCard = () => (
     <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 animate-pulse">
@@ -201,35 +203,37 @@ const Home = () => {
             </div>
           </div>
         </section>
-        <section className="py-20 text-white">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="relative border border-fuchsia-500/30 bg-gradient-to-br from-slate-900 to-[#0a0f1e] p-10 rounded-3xl shadow-2xl shadow-fuchsia-500/10 text-center overflow-hidden">
-              <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-fuchsia-500/20 via-cyan-500/10 to-transparent rounded-full animate-pulse blur-3xl"></div>
-              <h2 className="relative text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-fuchsia-400 animate-gradient bg-[200%_auto]">
-                Ready to Dive In?
-              </h2>
-              <p className="relative mt-4 text-slate-400 text-lg">
-                Sign up or jump straight into challenges. No distractions — just code.
-              </p>
-              <div className="relative mt-8 flex flex-col sm:flex-row justify-center gap-4">
-                <Link to="/signup">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button className="w-full sm:w-auto bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-lg px-8 py-3 rounded-xl font-bold transition-all duration-500 bg-[length:200%_auto] hover:bg-right-center">
-                      Create Account
-                    </Button>
-                  </motion.div>
-                </Link>
-                <Link to="/problems">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="outline" className="w-full sm:w-auto border-cyan-400 text-cyan-300 bg-transparent text-lg px-8 py-3 rounded-xl font-bold hover:bg-gradient-to-r hover:from-cyan-400 hover:to-teal-400 hover:text-white hover:border-transparent transition-all duration-300">
-                      Solve Problems
-                    </Button>
-                  </motion.div>
-                </Link>
+        {!user && (
+          <section className="py-20 text-white">
+            <div className="max-w-4xl mx-auto px-6">
+              <div className="relative border border-fuchsia-500/30 bg-gradient-to-br from-slate-900 to-[#0a0f1e] p-10 rounded-3xl shadow-2xl shadow-fuchsia-500/10 text-center overflow-hidden">
+                <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-radial from-fuchsia-500/20 via-cyan-500/10 to-transparent rounded-full animate-pulse blur-3xl"></div>
+                <h2 className="relative text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-fuchsia-400 animate-gradient bg-[200%_auto]">
+                  Ready to Dive In?
+                </h2>
+                <p className="relative mt-4 text-slate-400 text-lg">
+                  Sign up or jump straight into challenges. No distractions — just code.
+                </p>
+                <div className="relative mt-8 flex flex-col sm:flex-row justify-center gap-4">
+                  <Link to="/signup">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button className="w-full sm:w-auto bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-lg px-8 py-3 rounded-xl font-bold transition-all duration-500 bg-[length:200%_auto] hover:bg-right-center">
+                        Create Account
+                      </Button>
+                    </motion.div>
+                  </Link>
+                  <Link to="/problems">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button variant="outline" className="w-full sm:w-auto border-cyan-400 text-cyan-300 bg-transparent text-lg px-8 py-3 rounded-xl font-bold hover:bg-gradient-to-r hover:from-cyan-400 hover:to-teal-400 hover:text-white hover:border-transparent transition-all duration-300">
+                        Solve Problems
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <Footer />
       </main>

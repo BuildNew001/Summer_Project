@@ -4,11 +4,12 @@ const asyncHandler = require('express-async-handler');
 const runCode = asyncHandler(async (req, res) => {
   const { code, language, input } = req.body;
   const RUN_PORT = process.env.RUN_PORT;
+  const RUN_SERVICE_HOST = process.env.RUN_SERVICE_HOST;
 
-  if (!RUN_PORT) {
-    console.error('RUN_PORT is not defined in environment variables.');
+  if (!RUN_PORT || !RUN_SERVICE_HOST) {
+    console.error('RUN_PORT or RUN_SERVICE_HOST is not defined in environment variables.');
     res.status(500);
-    throw new Error('Server configuration error: Code execution service port is not set.');
+    throw new Error('Server configuration error: Code execution service connection details are not set.');
   }
 
   if (!code || !language) {
@@ -16,7 +17,7 @@ const runCode = asyncHandler(async (req, res) => {
     throw new Error('Code and language are required fields.');
   }
 
-  const targetUrl = `http://localhost:${RUN_PORT}/api/run`;
+  const targetUrl = `http://${RUN_SERVICE_HOST}:${RUN_PORT}/api/run`;
 
   try {
     const response = await axios.post(targetUrl, {

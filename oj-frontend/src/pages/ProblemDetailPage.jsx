@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, ArrowLeft, Sparkles, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { fetchProblemById, submitCode, getAIReview } from '../context/problemfetch';
+import { fetchProblemById, submitCode, getAIReview, fetchSubmissionById } from '../context/problemfetch';
 import CodeEditor from '../components/CodeEditor';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
-
+import { useAuth } from '../context/AuthContext';
 // Boilerplate code per language
 const boilerplate = {
   cpp: `#include <iostream>
-
 int main() {
     std::cout << "Hello, World!" << std::endl;
     return 0;
@@ -36,7 +35,6 @@ const difficultyColorMap = {
   Medium: 'bg-amber-500',
   Hard: 'bg-rose-500',
 };
-
 const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
   if (!isOpen) return null;
 
@@ -68,7 +66,8 @@ const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
 const ProblemDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { user } = useAuth();
   const [problem, setProblem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,6 +78,10 @@ const ProblemDetailPage = () => {
   const [isAiReviewing, setIsAiReviewing] = useState(false);
   const [aiReviewContent, setAiReviewContent] = useState('');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState('');
+  const pollingIntervalRef = useRef(null);
+  const pollingTimeoutRef = useRef(null);
+
   useEffect(() => {
     const getProblem = async () => {
       try {
@@ -96,6 +99,11 @@ const ProblemDetailPage = () => {
     getProblem();
   }, [id]);
 
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
+
   useEffect(() => {
     if (!problem) return;
 
@@ -109,20 +117,96 @@ const ProblemDetailPage = () => {
     setCode(defaultCode && defaultCode.trim() ? defaultCode : boilerplate[language]);
   }, [id, language, problem]);
 
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = null;
+    }
+  };
+
+  const startPolling = (submissionId) => {
+    stopPolling();
+
+    const POLLING_INTERVAL = 15000; // 15 seconds
+    const POLLING_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const submission = await fetchSubmissionById(submissionId);
+        const { status, executionTime, memoryUsed, output } = submission;
+
+        if (status && status !== 'Pending' && status !== 'In Queue') {
+          stopPolling();
+          setIsSubmitting(false);
+
+          let resultText = `Verdict: ${status}\n`;
+          if (executionTime) resultText += `Execution Time: ${executionTime.toFixed(2)} ms\n`;
+          if (memoryUsed) resultText += `Memory Used: ${(memoryUsed / 1024).toFixed(2)} KB\n`;
+          if (status === 'Compilation Error' || status !== 'Accepted') {
+            resultText += `\nDetails:\n${output || 'No output available.'}`;
+          }
+          setSubmissionResult(resultText);
+
+          if (status === 'Accepted') {
+            toast.success('Congratulations! Your solution was accepted!');
+          } else {
+            toast.error(`Submission failed: ${status}`);
+          }
+        } else {
+          setSubmissionResult(`Status: ${status || 'In Queue'}...`);
+        }
+      } catch (err) {
+        stopPolling();
+        setIsSubmitting(false);
+        setSubmissionResult('Error fetching submission status. Please check "My Submissions" page.');
+        toast.error('Could not get submission result.');
+      }
+    }, POLLING_INTERVAL);
+
+    pollingTimeoutRef.current = setTimeout(() => {
+      stopPolling();
+      setIsSubmitting(false);
+      const timeoutMessage =
+        'Server is taking too long to respond. Please check the "My Submissions" page later for the verdict.';
+      setSubmissionResult(timeoutMessage);
+      toast.warning('Server is busy.', {
+        description:
+          'Your submission is still being processed. You can check the result on the "My Submissions" page.',
+        duration: 10000,
+      });
+    }, POLLING_TIMEOUT);
+  };
+
   const handleSubmit = async () => {
+    if(!user){
+      toast.error('Please log in to submit solutions.');
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setIsSubmitting(true);
+    setSubmissionResult('Submitting your solution...');
     try {
       localStorage.setItem(`code-${id}-${language}`, code);
-      await submitCode({ problemId: id, language, code });
-      toast.success('Solution submitted successfully! Redirecting...');
-      navigate('/my-submissions');
+      const submissionResponse = await submitCode({ problemId: id, language, code });
+      toast.success('Solution submitted! Waiting for verdict...');
+      startPolling(submissionResponse.submissionId);
     } catch (err) {
       toast.error(err.message || 'Failed to submit solution.');
       setIsSubmitting(false);
+      setSubmissionResult(`Submission failed: ${err.message}`);
     }
   };
 
   const handleAiReview = async () => {
+    if(!user){
+      toast.error('Please log in to submit solutions.');
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     if (!code.trim()) {
       toast.warning('Please write some code to review.');
       return;
@@ -251,6 +335,7 @@ const ProblemDetailPage = () => {
             onLanguageChange={setLanguage}
             code={code}
             onCodeChange={setCode}
+            submissionResult={submissionResult}
           />
 
           <div className="flex flex-col sm:flex-row gap-4 mt-2">

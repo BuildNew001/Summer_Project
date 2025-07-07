@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import {
   fetchMySubmissions,
 } from "../context/problemfetch";
 import { Button } from "../components/ui/button";
+import { ChevronDown, ChevronUp, Code } from "lucide-react";
+import CodeEditor from "../components/CodeEditor";
 
 const MySubmissionsPage = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const pollingIntervalRef = useRef(null);
+  const [expandedRow, setExpandedRow] = useState(null);
 
   useEffect(() => {
     const getSubmissions = async () => {
@@ -26,48 +28,7 @@ const MySubmissionsPage = () => {
       }
     };
     getSubmissions();
-    return () => stopPolling();
   }, []);
-  const stopPolling = () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  };
-
-  const startPolling = () => {
-    if (pollingIntervalRef.current) return;
-
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const data = await fetchMySubmissions();
-        setSubmissions(data);
-      } catch (err) {
-        console.error("Polling failed during list re-fetch:", err);
-        stopPolling();
-      }
-    }, 5000); 
-  };
-  useEffect(() => {
-    const POLLING_TIMEOUT_MS = 15 * 60 * 1000;
-
-    const isRecentAndPending = (sub) => {
-      const isPending = !sub.status || sub.status === "Pending" || sub.status === "In Queue";
-      if (!isPending) return false;
-
-      const submissionTime = new Date(sub.createdAt).getTime();
-      const now = new Date().getTime();
-      return (now - submissionTime) < POLLING_TIMEOUT_MS;
-    };
-
-    const shouldBePolling = submissions.some(isRecentAndPending);
-
-    if (shouldBePolling && !pollingIntervalRef.current) {
-      startPolling();
-    } else if (!shouldBePolling && pollingIntervalRef.current) {
-      stopPolling();
-    }
-  }, [submissions]);
 
   if (loading) {
     return (
@@ -90,6 +51,10 @@ const MySubmissionsPage = () => {
     if (!status || status === "Pending" || status === "In Queue")
       return "text-yellow-400 animate-pulse";
     return "text-red-400"; 
+  };
+
+  const toggleRow = (id) => {
+    setExpandedRow(expandedRow === id ? null : id);
   };
 
   const visibleSubmissions = submissions.filter((sub) => sub.problem);
@@ -129,36 +94,65 @@ const MySubmissionsPage = () => {
                 <th className="py-4 px-6 text-left text-sm font-semibold text-slate-400 uppercase tracking-wider">
                   Submitted At
                 </th>
+                <th className="py-4 px-6 text-left text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                  Code
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {visibleSubmissions.map((sub) => (
-                <tr
-                  key={sub._id}
-                  className="hover:bg-slate-800/40 transition-colors duration-200"
-                >
-                  <td className="py-4 px-6">
-                    <Link
-                      to={`/problems/${sub.problem._id}`}
-                      className="text-cyan-400 hover:underline font-medium"
-                    >
-                      {sub.problem.title}
-                    </Link>
-                  </td>
-                  <td className="py-4 px-6 text-slate-300">{sub.language}</td>
-                  <td
-                    className={`py-4 px-6 font-semibold ${getVerdictClass(
-                      sub.status
-                    )}`}
+                <React.Fragment key={sub._id}>
+                  <tr
+                    className="hover:bg-slate-800/40 transition-colors duration-200"
                   >
-                    {sub.status || "Processing..."}
-                  </td>
-                  <td className="py-4 px-6 text-slate-400">
-                    {formatDistanceToNow(new Date(sub.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </td>
-                </tr>
+                    <td className="py-4 px-6">
+                      <Link
+                        to={`/problems/${sub.problem._id}`}
+                        className="text-cyan-400 hover:underline font-medium"
+                      >
+                        {sub.problem.title}
+                      </Link>
+                    </td>
+                    <td className="py-4 px-6 text-slate-300">{sub.language}</td>
+                    <td
+                      className={`py-4 px-6 font-semibold ${getVerdictClass(
+                        sub.status
+                      )}`}
+                    >
+                      {sub.status || "Processing..."}
+                    </td>
+                    <td className="py-4 px-6 text-slate-400">
+                      {formatDistanceToNow(new Date(sub.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </td>
+                    <td className="py-4 px-6">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRow(sub._id)}
+                        className="text-slate-400 hover:text-white hover:bg-slate-700"
+                      >
+                        <Code className="h-4 w-4 mr-2" />
+                        {expandedRow === sub._id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </td>
+                  </tr>
+                  {expandedRow === sub._id && (
+                    <tr className="bg-slate-900/20">
+                      <td colSpan="5" className="p-0">
+                        <div className="p-4">
+                          <CodeEditor
+                            language={sub.language}
+                            code={sub.code}
+                            readOnly={true}
+                            height="300px"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>

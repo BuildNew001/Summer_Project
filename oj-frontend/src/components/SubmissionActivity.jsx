@@ -121,7 +121,7 @@ const SubmissionActivity = ({ submissions }) => {
             </div>
             <div className="rounded-xl bg-[#13131f] p-4 sm:p-6 shadow-inner shadow-cyan-800/10 ring-1 ring-white/5 animate-fade-in-up overflow-x-auto">
               <CalendarHeatmap
-                startDate={new Date(new Date().setFullYear(new Date().getFullYear() - 1))}
+                startDate={new Date(new Date().setMonth(new Date().getMonth() - 8))}
                 endDate={new Date()}
                 values={data}
                 classForValue={(value) => {
@@ -152,6 +152,9 @@ const SubmissionActivity = ({ submissions }) => {
                 }
                 .animate-fade-in-up {
                   animation: fade-in-up 0.6s ease-out;
+                }
+                .react-calendar-heatmap {
+                  font-size: 10px;
                 }
 
                 .react-calendar-heatmap .color-empty { fill: ${HEATMAP_COLORS[0]}; }

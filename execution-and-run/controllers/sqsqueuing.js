@@ -25,6 +25,16 @@ const sqsClient = new SQSClient({
   },
 });
 
+let isShuttingDown = false;
+function gracefulShutdown() {
+  if (isShuttingDown) return;
+  console.log('Received shutdown signal. Finishing current message and shutting down...');
+  isShuttingDown = true;
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);  
+
 const processMessage = async (message) => {
   const body = JSON.parse(message.Body);
   const { submissionId, code, language, problemId } = body;
@@ -74,7 +84,7 @@ const processMessage = async (message) => {
     console.log(`Submission ${submissionId} processed successfully.`);
 
   } catch (processingError) {
-    console.error(`Error processing submission ${submissionId}:`, processingError);
+   console.error(`Error processing submission ${submissionId}:`, processingError);
     try {
       await Submission.findByIdAndUpdate(submissionId, {
         status: 'Error',
@@ -107,7 +117,7 @@ const startPolling = () => {
   console.log("Worker started. Polling for messages...");
 
   const poll = async () => {
-    while (true) {
+    while (!isShuttingDown) {
       const params = {
         QueueUrl: SQS_QUEUE_URL,
         MaxNumberOfMessages: 1,
@@ -125,6 +135,7 @@ const startPolling = () => {
         await new Promise(res => setTimeout(res, 5000)); 
       }
     }
+    console.log('Polling stopped. Worker is shutting down.');
   };
 
   poll().catch(err => {

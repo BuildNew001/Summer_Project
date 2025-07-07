@@ -53,10 +53,10 @@ const App = () => {
           <Route path='/login' element={<LoginPage />} />
           <Route path='/signup' element={<SignupPage />} />
           <Route path='/' element={<HomePage />} />
+          <Route path='/problems' element={<ProblemsPage />} />
+          <Route path='/problems/:id' element={<ProblemDetailPage />} />
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute />}>
-            <Route path='/problems' element={<ProblemsPage />} />
-            <Route path='/problems/:id' element={<ProblemDetailPage />} />
             <Route path='/contests' element={<ContestsPage />} />
             <Route path='/profile' element={<ProfilePage />} />
             <Route path='/my-submissions' element={<MySubmissionsPage />} />
