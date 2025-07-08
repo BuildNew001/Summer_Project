@@ -23,3 +23,5 @@ README.md
 *.njsproj
 *.sln
 *.sw?
+.env
+

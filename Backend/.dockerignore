@@ -1,0 +1,6 @@
+# Ignore local dependencies
+node_modules
+.env
+npm-debug.log
+
+

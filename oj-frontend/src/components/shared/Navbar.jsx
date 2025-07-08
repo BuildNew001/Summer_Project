@@ -62,7 +62,7 @@ const Navbar = () => {
           >
             <TerminalSquare className='h-8 w-8 text-[#00d4ff] group-hover:text-[#00ffa3] group-hover:rotate-[8deg] transition-all duration-300' />
             <span className='text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] group-hover:brightness-125'>
-              Online Judge
+              Code Blaze
             </span>
           </Link>
 

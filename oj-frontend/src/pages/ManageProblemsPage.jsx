@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchProblems, createProblem, deleteProblem, updateProblem } from '../context/problemfetch';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -114,7 +114,7 @@ const ManageProblemsPage = () => {
     });
     const [editingProblem, setEditingProblem] = useState(null);
 
-    const loadProblems = async () => {
+    const loadProblems = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchProblems();
@@ -128,11 +128,11 @@ const ManageProblemsPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
     useEffect(() => {
         loadProblems();
-    }, [user]); 
+    }, [loadProblems]); 
 
     const handleNewProblemChange = (e) => {
         const { name, value } = e.target;

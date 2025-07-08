@@ -26,7 +26,7 @@ const Home = () => {
     </div>
   );
 
-  const heroTitle = "Online Judge Terminal";
+  const heroTitle = "Code Blaze Terminal";
   const sentenceVariants = {
     hidden: { opacity: 1 },
     visible: {

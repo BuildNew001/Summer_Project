@@ -6,8 +6,9 @@ const protect = asyncHandler(async (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) {
-    res.status(401);
-    throw new Error('Not authorized, no token provided');
+    const error = new Error('Not authorized, no token provided');
+    error.status = 401;
+    return next(error);
   }
 
   try {
@@ -15,14 +16,16 @@ const protect = asyncHandler(async (req, res, next) => {
     req.user = await User.findById(decoded.id).select('-password');
 
     if (!req.user) {
-      res.status(401);
-      throw new Error('Not authorized, user not found');
+      const error = new Error('Not authorized, user not found');
+      error.status = 401;
+      return next(error);
     }
     console.log('Authenticated User:', req.user.UserName); 
     next();
-  } catch (error) {
-    res.status(401);
-    throw new Error('Not authorized, token failed or expired');
+  } catch (err) {
+    const error = new Error('Not authorized, token is invalid or expired.');
+    error.status = 401;
+    return next(error);
   }
 });
 
@@ -30,7 +33,9 @@ const authorize = (roles) => {
   return (req, res, next) => {
     const role = req.user?.role?.trim();
     if (!role || !roles.includes(role)) {
-      return res.status(403).json({ message: 'Forbidden: insufficient role' });
+      const error = new Error('Forbidden: You do not have permission to perform this action.');
+      error.status = 403;
+      return next(error);
     }
     next();
   };

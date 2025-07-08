@@ -21,8 +21,8 @@ const sendTokenResponse = (user, statusCode, res) => {
   const options = {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), 
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', 
-    sameSite: 'lax', 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   };
 
   res.status(statusCode).cookie('token', token, options).json({
@@ -89,20 +89,17 @@ exports.login = async (req, res, next) => {
 
 exports.logout = (req, res, next) => {
   res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
+    expires: new Date(Date.now() - 10 * 1000), 
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   res.status(200).json({
     success: true,
-    message: 'User logged out successfully'
+    message: 'User logged out successfully',
   });
 };
-
-// @desc    Get current logged-in user
-// @route   GET /api/auth/me
-// @access  Private
 exports.getMe = (req, res, next) => {
-  // The 'protect' middleware has already attached the user to the request object
   res.status(200).json(req.user);
 };

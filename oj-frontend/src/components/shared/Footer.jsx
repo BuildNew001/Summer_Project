@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="flex justify-center items-center mb-4">
           <Link to="/" className="flex items-center gap-2 text-white text-xl font-bold">
             <Code className="h-7 w-7 text-cyan-400" />
-            <span>Online Judge</span>
+            <span>Code Blaze</span>
           </Link>
         </div>
         <div className="flex justify-center items-center space-x-6 mb-6 text-sm">
