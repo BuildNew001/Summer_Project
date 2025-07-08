@@ -7,8 +7,8 @@ import { useFeaturedProblems } from '../hooks/useFeaturedProblems';
 import Footer from '../components/shared/Footer';
 import { useAuth } from '../context/AuthContext';
 
-const DEFAULT_OJ_LOGO_URL = '..//../public/logo-normal.png';
-const HOVER_OJ_LOGO_URL = '..//../public/logo-hover.png';
+const DEFAULT_OJ_LOGO_URL = '/logo-normal.png';
+const HOVER_OJ_LOGO_URL = '/logo-hover.png';
 
 const Home = () => {
   const { problems: featuredProblems, isLoading, error } = useFeaturedProblems(3);
@@ -66,7 +66,7 @@ const Home = () => {
       <main
         className="min-h-screen text-slate-200 font-sans bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: "linear-gradient(rgba(10, 15, 30, 0.85), rgba(10, 15, 30, 0.85)), url('.././../public/bg.png')"
+          backgroundImage: "linear-gradient(rgba(10, 15, 30, 0.85), rgba(10, 15, 30, 0.85)), url('/bg.png')"
         }}>
         <section
           className="relative flex items-center justify-center text-center py-32 px-6 text-white overflow-hidden h-screen"
