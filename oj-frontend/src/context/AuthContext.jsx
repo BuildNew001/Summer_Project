@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       setSocket(newSocket);
 
       newSocket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err);
+        console.error('Socket connection error:', err.message);
         toast.error(`Collaboration service connection failed: ${err.message}`);
       });
 
@@ -74,13 +74,10 @@ export const AuthProvider = ({ children }) => {
       newSocket.on('session-left-successfully', handleSessionLeft);
 
       return () => {
-        newSocket.off('collab-session-ended', handleSessionEnded);
-        newSocket.off('session-left-successfully', handleSessionLeft);
         newSocket.disconnect();
-        setSocket(null); 
       };
     }
-  }, [user]); 
+  }, [user, navigate]);
 
    useEffect(() => {
     const checkAuthStatus = async () => {
@@ -186,3 +183,4 @@ export const useAuth = () => {
   }
   return context;
 };
+export default AuthContext;
