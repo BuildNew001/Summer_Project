@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       setSocket(newSocket);
 
       newSocket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err.message);
+        console.error('Socket connection error:', err);
         toast.error(`Collaboration service connection failed: ${err.message}`);
       });
 
@@ -131,6 +131,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error.response?.data || error.message);
       toast.error('Logout failed on server, logging out locally.');
     } finally {
+      setSocket(null);
       setUser(null);
       localStorage.removeItem('activeCollabSession');
       setActiveCollabSession(null); 

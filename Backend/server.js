@@ -47,6 +47,7 @@ app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`server started on port ${PORT}`);
+  console.log(`Server started on port ${PORT}`);
+  console.log(`CORS origin for sockets and API set to: ${process.env.CLIENT_URL}`);
   startResultPolling(io); 
 });
