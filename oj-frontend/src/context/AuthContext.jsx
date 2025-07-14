@@ -74,10 +74,13 @@ export const AuthProvider = ({ children }) => {
       newSocket.on('session-left-successfully', handleSessionLeft);
 
       return () => {
+        newSocket.off('collab-session-ended', handleSessionEnded);
+        newSocket.off('session-left-successfully', handleSessionLeft);
         newSocket.disconnect();
+        setSocket(null); 
       };
     }
-  }, [user, navigate]);
+  }, [user]); 
 
    useEffect(() => {
     const checkAuthStatus = async () => {
@@ -131,7 +134,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error.response?.data || error.message);
       toast.error('Logout failed on server, logging out locally.');
     } finally {
-      setSocket(null);
       setUser(null);
       localStorage.removeItem('activeCollabSession');
       setActiveCollabSession(null); 
