@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext(undefined);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ;
+const SOCKET_URL = import.meta.env.VITE_BASE_URL ;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   }, [activeCollabSession]);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user) {
       const newSocket = io(SOCKET_URL, {
         withCredentials: true, 
       });
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         newSocket.disconnect();
       };
     }
-  }, [user?.id, navigate]);
+  }, [user, navigate]);
 
    useEffect(() => {
     const checkAuthStatus = async () => {
