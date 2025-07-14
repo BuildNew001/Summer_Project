@@ -20,7 +20,6 @@ const protect = asyncHandler(async (req, res, next) => {
       error.status = 401;
       return next(error);
     }
-    console.log('Authenticated User:', req.user.UserName); 
     next();
   } catch (err) {
     const error = new Error('Not authorized, token is invalid or expired.');

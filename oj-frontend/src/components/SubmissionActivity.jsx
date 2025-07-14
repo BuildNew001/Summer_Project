@@ -12,6 +12,35 @@ const HEATMAP_COLORS = [
   '#39d353', // 4+ submissions
 ];
 
+const StatCard = ({ icon, label, value, color }) => {
+  const styles = {
+    green: {
+      wrapper: 'hover:border-green-400/50',
+      iconBg: 'bg-green-500/10',
+    },
+    orange: {
+      wrapper: 'hover:border-orange-400/50',
+      iconBg: 'bg-orange-500/10',
+    },
+    blue: {
+      wrapper: 'hover:border-blue-400/50',
+      iconBg: 'bg-blue-500/10',
+    },
+  }[color];
+
+  return (
+    <div className={`bg-[#1c1c2e] rounded-xl p-6 flex items-center gap-6 border border-white/5 shadow-lg transition-all hover:bg-[#24243e] ${styles.wrapper}`}>
+      <div className={`${styles.iconBg} p-3 rounded-lg`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-white">{value}</p>
+        <p className="text-sm text-gray-400">{label}</p>
+      </div>
+    </div>
+  );
+};
+
 const SubmissionActivity = ({ submissions }) => {
   const {
     data,
@@ -29,59 +58,59 @@ const SubmissionActivity = ({ submissions }) => {
         totalAcceptedSubmissions: 0,
       };
     }
-
-    const acceptedSubs = submissions.filter((s) => s.status === 'Accepted');
-
-    const dailyCounts = acceptedSubs.reduce((acc, sub) => {
+    const dailyCounts = submissions.reduce((acc, sub) => {
       if (!sub.createdAt) return acc;
       const date = new Date(sub.createdAt).toISOString().slice(0, 10);
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     }, {});
-
+    const acceptedSubs = submissions.filter((s) => s.status === 'Accepted');
     const activityData = Object.entries(dailyCounts).map(([date, count]) => ({ date, count }));
 
-    const solvedProblems = new Map();
-    acceptedSubs.forEach((sub) => {
-      const problemId = sub.problem?._id;
-      const submissionDate = new Date(sub.createdAt);
-      if (!problemId || isNaN(submissionDate)) return;
-      if (!solvedProblems.has(problemId) || submissionDate < solvedProblems.get(problemId)) {
-        solvedProblems.set(problemId, submissionDate);
-      }
-    });
+const solvedProblems = new Map();
+acceptedSubs.forEach((sub) => {
+  const problemId = sub.problem?._id;
+  const submissionDate = new Date(sub.createdAt);
+  if (!problemId || isNaN(submissionDate)) return;
+  if (!solvedProblems.has(problemId) || submissionDate < solvedProblems.get(problemId)) {
+    solvedProblems.set(problemId, submissionDate);
+  }
+});
+const totalSolved = solvedProblems.size;
+const submissionDates = submissions.map((sub) =>
+  new Date(sub.createdAt).toISOString().slice(0, 10)
+);
+const uniqueSubmissionDates = [...new Set(submissionDates)].sort();
 
-    const totalSolved = solvedProblems.size;
-    const uniqueSolveDates = [...new Set([...solvedProblems.values()].map((d) => d.toISOString().slice(0, 10)))].sort();
+let currentStreak = 0;
+let longestStreak = 0;
 
-    let currentStreak = 0;
-    let longestStreak = 0;
+if (uniqueSubmissionDates.length > 0) {
+  longestStreak = 1;
+  let activeStreak = 1;
 
-    if (uniqueSolveDates.length > 0) {
-      longestStreak = 1;
-      let activeStreak = 1;
-
-      for (let i = 1; i < uniqueSolveDates.length; i++) {
-        const currentDate = new Date(uniqueSolveDates[i]);
-        const prevDate = new Date(uniqueSolveDates[i - 1]);
-        const diffDays = Math.round((currentDate - prevDate) / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          activeStreak++;
-        } else {
-          longestStreak = Math.max(longestStreak, activeStreak);
-          activeStreak = 1;
-        }
-      }
-
+  for (let i = 1; i < uniqueSubmissionDates.length; i++) {
+    const currentDate = new Date(uniqueSubmissionDates[i]);
+    const prevDate = new Date(uniqueSubmissionDates[i - 1]);
+    const diffDays = Math.round((currentDate - prevDate) / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) {
+      activeStreak++;
+    } else {
       longestStreak = Math.max(longestStreak, activeStreak);
-
-      const lastSolveDate = new Date(uniqueSolveDates[uniqueSolveDates.length - 1]);
-      const todayDate = new Date(new Date().toISOString().slice(0, 10));
-      const diffFromToday = Math.round((todayDate - lastSolveDate) / (1000 * 60 * 60 * 24));
-      if (diffFromToday <= 1) {
-        currentStreak = activeStreak;
-      }
+      activeStreak = 1;
     }
+  }
+
+  longestStreak = Math.max(longestStreak, activeStreak);
+
+  const lastSolveDate = new Date(uniqueSubmissionDates[uniqueSubmissionDates.length - 1]);
+  const todayDate = new Date(new Date().toISOString().slice(0, 10));
+  const diffFromToday = Math.round((todayDate - lastSolveDate) / (1000 * 60 * 60 * 24));
+  if (diffFromToday <= 1) {
+    currentStreak = activeStreak;
+  }
+}
+
 
     return {
       data: activityData,
@@ -193,35 +222,6 @@ const SubmissionActivity = ({ submissions }) => {
             <p className="text-sm text-gray-500 mt-1">Your submission activity will appear here once you solve some problems.</p>
           </div>
         )}
-      </div>
-    </div>
-  );
-};
-
-const StatCard = ({ icon, label, value, color }) => {
-  const styles = {
-    green: {
-      wrapper: 'hover:border-green-400/50',
-      iconBg: 'bg-green-500/10',
-    },
-    orange: {
-      wrapper: 'hover:border-orange-400/50',
-      iconBg: 'bg-orange-500/10',
-    },
-    blue: {
-      wrapper: 'hover:border-blue-400/50',
-      iconBg: 'bg-blue-500/10',
-    },
-  }[color];
-
-  return (
-    <div className={`bg-[#1c1c2e] rounded-xl p-6 flex items-center gap-6 border border-white/5 shadow-lg transition-all hover:bg-[#24243e] ${styles.wrapper}`}>
-      <div className={`${styles.iconBg} p-3 rounded-lg`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-3xl font-bold text-white">{value}</p>
-        <p className="text-sm text-gray-400">{label}</p>
       </div>
     </div>
   );

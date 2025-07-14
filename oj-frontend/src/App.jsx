@@ -54,6 +54,7 @@ const App = () => {
           <Route path='/signup' element={<SignupPage />} />
           <Route path='/' element={<HomePage />} />
           <Route path='/problems' element={<ProblemsPage />} />
+          <Route path='/problems/:id/collab/:sessionId' element={<ProblemDetailPage />} />
           <Route path='/problems/:id' element={<ProblemDetailPage />} />
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute />}>

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "../../lib/utils";
+import { cn, getAvatarUrl } from "../../lib/utils";
 import {
   User,
   Settings,
@@ -19,9 +19,6 @@ import {
   LayoutDashboard,
   Trophy,
 } from "lucide-react";
-
-const getAvatarUrl = (seed) =>
-  `https://robohash.org/${encodeURIComponent(seed)}.png?set=set1&size=100x100`;
 
 const UserButton = () => {
   const { user: authUser, logout } = useAuth();

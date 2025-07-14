@@ -15,12 +15,12 @@ const sqsClient = new SQSClient({
 const createSubmission = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const {problemId, code, language} = req.body;
-
-    const problem = await Problem.findById(problemId).lean();
+    const problem = await Problem.findById(problemId);
     if (!problem) {
         res.status(404);
         throw new Error('Problem not found');
     }
+
 
     const newSubmission = await Submission.create({
         userId,
@@ -35,9 +35,9 @@ const createSubmission = asyncHandler(async (req, res) => {
     } else {
         const messageBody = {
             submissionId: newSubmission._id.toString(), 
-            problemId: problemId.toString(), 
             code: code,
             language: language,
+            testCases: problem.sampleTestCases, 
         };
         const params = {
             MessageBody: JSON.stringify(messageBody),
@@ -49,6 +49,8 @@ const createSubmission = asyncHandler(async (req, res) => {
             console.log(`Message sent to SQS for submission ${newSubmission._id}`);
         } catch (sqsErr) {
             console.error(`Error sending message to SQS for submission ${newSubmission._id}:`, sqsErr);
+            await Submission.findByIdAndDelete(newSubmission._id); 
+            throw new Error('Failed to queue submission for processing. Please try again.');
         }
     }
 

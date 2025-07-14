@@ -96,7 +96,7 @@ const ProfilePage = () => {
         <div className="rounded-2xl bg-[#1a1a2e]/90 backdrop-blur-md p-6 md:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col sm:flex-row items-center gap-8">
           {/* Clean Avatar - matches nav style */}
           <Avatar className="h-24 w-24 rounded-lg ring-1 ring-white/10 shadow-md overflow-hidden">
-            <AvatarImage src={getAvatarUrl(email)} alt={name} className="object-cover" />
+            <AvatarImage src={getAvatarUrl(email, 200)} alt={name} className="object-cover" />
             <AvatarFallback className="bg-[#24243e] text-gray-300 font-medium text-xl">
               {name.charAt(0).toUpperCase()}
             </AvatarFallback>

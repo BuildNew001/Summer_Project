@@ -4,5 +4,5 @@ const {
   generateReview,
 } = require('../controllers/aiController');
 const { protect } = require('../middleware/authMiddleware');
-router.post('/', generateReview);
+router.post('/', protect, generateReview);
 module.exports = router;

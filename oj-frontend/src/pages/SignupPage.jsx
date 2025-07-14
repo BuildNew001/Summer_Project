@@ -39,7 +39,7 @@ const SignupPage = () => {
 
   useEffect(() => {
     if (authUser) {
-      navigate("/profile");
+       navigate('/', {replace: true });
     }
   }, [authUser, navigate]);
 

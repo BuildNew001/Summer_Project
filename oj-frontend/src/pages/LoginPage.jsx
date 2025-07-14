@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -25,12 +25,14 @@ const LoginPage = () => {
   const { login, user: authUser } = useAuth();
   const [isLogginIn, setIsLogginIn] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
     if (authUser) {
-      navigate("/profile");
+      navigate(from, { replace: true });
     }
-  }, [authUser, navigate]);
+  }, [authUser, navigate, from]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),

@@ -72,7 +72,7 @@ const Home = () => {
           className="relative flex items-center justify-center text-center py-32 px-6 text-white overflow-hidden h-screen"
         >
           <div
-            className="absolute inset-0 z-0 opacity-20" // Reduced opacity from 50 to 20 for a more subtle grid effect.
+            className="absolute inset-0 z-0 opacity-20" 
             style={{
               backgroundImage: 'linear-gradient(rgba(200, 220, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(200, 220, 255, 0.05) 1px, transparent 1px)',
               backgroundSize: '20px 20px',

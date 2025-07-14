@@ -35,6 +35,9 @@ const SubmissionSchema = new mongoose.Schema(
     },
     output: {
       type: String
+    },
+    error: {
+      type: String
     }
   },
   { timestamps: true }

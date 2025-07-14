@@ -1,6 +1,5 @@
 const express = require('express')
 const dotenv = require('dotenv')
-const connectDB = require('./config/db')
 const { startPolling } = require('./controllers/sqsqueuing')
 const runRoute = require('./routes/runRoute')
 dotenv.config()
@@ -11,7 +10,6 @@ app.use((req, res, next) => {
   next()
 })
 app.use('/api', runRoute)
-connectDB()
 startPolling()
 const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
