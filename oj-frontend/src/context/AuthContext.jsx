@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 const AuthContext = createContext(undefined);
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
