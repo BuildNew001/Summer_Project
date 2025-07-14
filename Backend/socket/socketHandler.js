@@ -19,26 +19,36 @@ const initializeSocket = (io) => {
   };
 
   io.use(async (socket, next) => {
+    console.log(`[Socket Auth] Attempting to authenticate socket ${socket.id}...`);
     const cookieStr = socket.handshake.headers.cookie;
     if (!cookieStr) {
+      console.error('[Socket Auth] Error: No cookie provided in handshake headers.');
       return next(new Error('Authentication error: No cookie provided.'));
     }
+
     const cookies = cookie.parse(cookieStr);
     const token = cookies.token;
 
     if (!token) {
+      console.error('[Socket Auth] Error: "token" not found in parsed cookies.');
       return next(new Error('Authentication error: No token provided.'));
     }
 
     try {
+      if (!process.env.JWT_SECRET) {
+        console.error('[Socket Auth] FATAL: JWT_SECRET environment variable is not set!');
+      }
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.id).select('-password');
       if (!user) {
+        console.error(`[Socket Auth] Error: User not found for decoded ID: ${decoded.id}`);
         return next(new Error('Authentication error: User not found.'));
       }
       socket.user = user;
+      console.log(`[Socket Auth] Success: Authenticated user ${user.UserName} (${socket.id})`);
       next();
     } catch (err) {
+      console.error('[Socket Auth] Error: JWT verification failed.', err);
       return next(new Error('Authentication error: Invalid token.'));
     }
   });

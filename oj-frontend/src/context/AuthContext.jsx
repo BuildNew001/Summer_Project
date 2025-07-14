@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   }, [activeCollabSession]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       const newSocket = io(SOCKET_URL, {
         withCredentials: true, 
       });
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         newSocket.disconnect();
       };
     }
-  }, [user, navigate]);
+  }, [user?.id, navigate]);
 
    useEffect(() => {
     const checkAuthStatus = async () => {
