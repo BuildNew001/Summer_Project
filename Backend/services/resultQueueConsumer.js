@@ -20,9 +20,9 @@ if (!SQS_RESULTS_QUEUE_URL) {
 
 let isShuttingDown = false;
 function gracefulShutdown() {
-  if (isShuttingDown) return;
-  console.log('Received shutdown signal for result consumer. Finishing current message and shutting down...');
-  isShuttingDown = true;
+    if (isShuttingDown) return;
+    console.log('Received shutdown signal for result consumer. Finishing current message and shutting down...');
+    isShuttingDown = true;
 }
 
 process.on('SIGTERM', gracefulShutdown);
@@ -39,8 +39,7 @@ const deleteMessageFromResultQueue = async (receiptHandle) => {
         throw err;
     }
 };
-
-const processResultMessage = async (message, io) => {
+const processResultMessage = async (message) => { 
     const body = JSON.parse(message.Body);
     const { submissionId, status, output, error } = body;
 
@@ -60,7 +59,7 @@ const processResultMessage = async (message, io) => {
                 output,
                 error: error || '',
             },
-            { new: true } 
+            { new: true }
         ).lean();
 
         if (!submission) {
@@ -70,15 +69,6 @@ const processResultMessage = async (message, io) => {
         }
 
         console.log(`Submission ${submissionId} updated in DB. Status: ${status}`);
-        const userId = submission.userId.toString();
-        io.to(userId).emit('submission-update', {
-            _id: submission._id.toString(),
-            status: submission.status,
-            problemId: submission.problemId.toString(),
-            output: submission.output,
-            error: submission.error,
-        });
-        console.log(`Sent socket notification to user room: ${userId}`);
         await deleteMessageFromResultQueue(message.ReceiptHandle);
         console.log(`Result message for submission ${submissionId} processed and deleted.`);
 
@@ -86,8 +76,7 @@ const processResultMessage = async (message, io) => {
         console.error(`Error processing result for submission ${submissionId}:`, processingError);
     }
 };
-
-const startResultPolling = (io) => {
+const startResultPolling = () => { 
     if (!SQS_RESULTS_QUEUE_URL) {
         console.warn("Cannot start result polling because SQS_RESULTS_QUEUE_URL is not set.");
         return;
@@ -99,7 +88,7 @@ const startResultPolling = (io) => {
             const params = {
                 QueueUrl: SQS_RESULTS_QUEUE_URL,
                 MaxNumberOfMessages: 1,
-                WaitTimeSeconds: 20, 
+                WaitTimeSeconds: 20,
             };
 
             try {
@@ -107,14 +96,14 @@ const startResultPolling = (io) => {
 
                 const data = await sqsClient.send(new ReceiveMessageCommand(params));
                 if (data.Messages && data.Messages.length > 0) {
-                    await processResultMessage(data.Messages[0], io);
+                    await processResultMessage(data.Messages[0]);
                 }
             } catch (err) {
                 if (isShuttingDown) {
                     break;
                 }
                 console.error("Result queue polling error:", err);
-                await new Promise(res => setTimeout(res, 5000)); 
+                await new Promise(res => setTimeout(res, 5000));
             }
         }
         console.log('Result polling stopped. Consumer is shutting down.');
@@ -125,5 +114,4 @@ const startResultPolling = (io) => {
         process.exit(1);
     });
 };
-
-module.exports = { startResultPolling };
+module.exports = { startResultPolling }; 
