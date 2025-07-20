@@ -67,6 +67,14 @@ const difficultyColorMap = {
   Hard: "bg-rose-500",
 };
 
+/**
+ * AIReviewModal component displays the AI review content in a modal.
+ * @param {object} props - Component props.
+ * @param {boolean} props.isOpen - Whether the modal is open.
+ * @param {function} props.onClose - Function to close the modal.
+ * @param {boolean} props.isLoading - Whether the AI review is loading.
+ * @param {string} props.reviewContent - The content of the AI review.
+ */
 const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
   if (!isOpen) return null;
 
@@ -102,6 +110,10 @@ const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
   );
 };
 
+/**
+ * MainContent component displays the problem description, code editor, and action buttons.
+ * It is memoized for performance optimization.
+ */
 const MainContent = React.memo(
   ({
     problem, language, setLanguage, code, handleCodeChange, handleCursorChange, cursors,
@@ -275,11 +287,12 @@ const MainContent = React.memo(
           </div>
         )}
 
+        {/* CodeEditor component */}
         <CodeEditor
           language={language}
           onLanguageChange={setLanguage}
-          code={code}
-          onCodeChange={handleCodeChange}
+          code={code} 
+          onCodeChange={handleCodeChange} 
           onMount={onCodeEditorMount}
           onCursorChange={handleCursorChange}
           cursors={cursors}
@@ -293,7 +306,7 @@ const MainContent = React.memo(
             onClick={handleAiReview}
             disabled={
               isAiReviewing || isSubmitting || !code.trim() || isInCollabSession
-            }
+            } 
             className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl"
           >
             {isAiReviewing ? (
@@ -311,7 +324,7 @@ const MainContent = React.memo(
             onClick={handleSubmit}
             disabled={
               isSubmitting || isAiReviewing || !code.trim() || isInCollabSession
-            }
+            } 
             className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl text-sm font-semibold px-6 py-3 rounded-xl"
           >
             {isSubmitting ? (
@@ -338,7 +351,6 @@ const MainContent = React.memo(
     </div>
   )
 );
-
 const ProblemDetailPage = () => {
   const { id, sessionId } = useParams();
   const navigate = useNavigate();
@@ -351,7 +363,7 @@ const ProblemDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [language, setLanguage] = useState("cpp");
-  const [code, setCode] = useState("");  
+  const [code, setCode] = useState(""); 
   const [cursors, setCursors] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -361,11 +373,10 @@ const ProblemDetailPage = () => {
   const [submissionResult, setSubmissionResult] = useState("");
   const [currentSubmissionId, setCurrentSubmissionId] = useState(null);
   const [hostId, setHostId] = useState(null);
-  const [isSynced, setIsSynced] = useState(false);
   const [participants, setParticipants] = useState([]);
 
-  const editorRef = useRef(null);
-  const monacoBindingRef = useRef(null);
+  const editorRef = useRef(null); 
+  const monacoBindingRef = useRef(null); 
   const pollingIntervalRef = useRef(null);
   const pollingTimeoutRef = useRef(null);
 
@@ -432,8 +443,7 @@ const ProblemDetailPage = () => {
       toast.error("Could not get submission result.");
     } finally {
     }
-  }, [setIsSubmitting, setSubmissionResult, toast, fetchSubmissionById]);
-
+  }, []);
   useEffect(() => {
     const getProblem = async () => {
       try {
@@ -454,7 +464,9 @@ const ProblemDetailPage = () => {
 
     const yText = ydoc.getText("codetext");
     const yChat = ydoc.getArray("chatMessages");
-    const handleCodeUpdate = () => setCode(yText.toString());
+    const handleCodeUpdate = () => {
+      setCode(yText.toString());
+    };
     const handleChatUpdate = () => setChatMessages(yChat.toArray());
     const handleAwarenessChange = () => {
       const states = Array.from(awareness.getStates().values());
@@ -472,19 +484,17 @@ const ProblemDetailPage = () => {
       const host = states.find((s) => s.user?.isHost);
       setHostId(host?.user?.id || null);
     };
-
     yText.observe(handleCodeUpdate);
     yChat.observe(handleChatUpdate);
     awareness.on("change", handleAwarenessChange);
     handleChatUpdate();
     handleAwarenessChange();
-
     return () => {
       yText.unobserve(handleCodeUpdate);
       yChat.unobserve(handleChatUpdate);
       awareness.off("change", handleAwarenessChange);
     };
-  }, [isInCollabSession, ydoc, awareness, problem, language]);
+  }, [isInCollabSession, ydoc, awareness, problem, language]); 
   useEffect(() => {
     if (currentSubmissionId && !pollingIntervalRef.current) {
       if (pollingTimeoutRef.current) {
@@ -493,8 +503,8 @@ const ProblemDetailPage = () => {
       }
       setSubmissionResult("Status: In Queue...");
 
-      const POLLING_INTERVAL = 10000;
-      const POLLING_TIMEOUT = 3 * 60 * 1000;
+      const POLLING_INTERVAL = 10000; 
+      const POLLING_TIMEOUT = 3 * 60 * 1000; 
 
       pollingIntervalRef.current = setInterval(async () => {
         console.log(`Polling for submission ${currentSubmissionId}...`);
@@ -517,7 +527,6 @@ const ProblemDetailPage = () => {
           toast.error('Could not get submission result via polling.');
         }
       }, POLLING_INTERVAL);
-
       pollingTimeoutRef.current = setTimeout(() => {
         stopPolling();
         setIsSubmitting(false);
@@ -531,12 +540,12 @@ const ProblemDetailPage = () => {
         });
       }, POLLING_TIMEOUT);
     } else {
-      stopPolling();
+      stopPolling(); 
     }
     return () => {
       stopPolling();
     };
-  }, [currentSubmissionId, fetchFullSubmissionDetails, stopPolling, setIsSubmitting, setSubmissionResult, toast]);
+  }, [currentSubmissionId, fetchFullSubmissionDetails, stopPolling]);
 
   const handleCursorChange = useCallback(
     (cursorPosition) => {
@@ -572,13 +581,13 @@ const ProblemDetailPage = () => {
       }
 
       const yText = ydoc.getText("codetext");
-
       if (yText.length === 0) {
         const currentLocalCode = localStorage.getItem(`code-${id}-${language}`) || "";
         const initialContent = currentLocalCode.trim() ? currentLocalCode : (problem.defaultCode?.[language] || boilerplate[language]);
-        yText.insert(0, initialContent);
+        ydoc.transact(() => {
+          yText.insert(0, initialContent);
+        });
       }
-
       monacoBindingRef.current = new MonacoBinding(
         yText,
         model,
@@ -590,8 +599,8 @@ const ProblemDetailPage = () => {
     } else if (!isInCollabSession) {
       const savedCode = localStorage.getItem(`code-${id}-${language}`);
       const initialCode = savedCode && savedCode.trim() ? savedCode : (problem.defaultCode?.[language] || boilerplate[language]);
-      model.setValue(initialCode);
-      setCode(initialCode);
+      model.setValue(initialCode); 
+      setCode(initialCode); 
     }
     return () => {
       if (monacoBindingRef.current) {
@@ -599,20 +608,7 @@ const ProblemDetailPage = () => {
         monacoBindingRef.current = null;
       }
     };
-  }, [isInCollabSession, ydoc, awareness, problem, language, setCode, id, boilerplate]);
-
-  useEffect(() => {
-    if (isInCollabSession && ydoc && awareness && problem && !isSynced) {
-      const yText = ydoc.getText("codetext");
-      setCode(yText.toString());
-      setIsSynced(true);
-    }
-  }, [isInCollabSession, ydoc, awareness, problem, isSynced, setCode]);
-
-  useEffect(() => {
-    setIsSynced(false);
-  }, [sessionId]);
-
+  }, [isInCollabSession, ydoc, awareness, problem, language, id]);
   const handleSendMessage = useCallback(
     (text) => {
       if (!text.trim() || !ydoc) return;
@@ -633,24 +629,30 @@ const ProblemDetailPage = () => {
     },
     [ydoc, user]
   );
-
   const handleSubmit = useCallback(async () => {
     if (!user) {
       toast.error("Please log in to submit solutions.");
       navigate("/login", { state: { from: location } });
       return;
     }
+    const codeToSubmit = editorRef.current?.getValue();
+    if (!codeToSubmit || !codeToSubmit.trim()) {
+      toast.warning("Please write some code before submitting.");
+      return;
+    }
+
     setIsSubmitting(true);
     setCurrentSubmissionId(null);
     setSubmissionResult("Submitting your solution...");
+    if (!isInCollabSession) {
+      localStorage.setItem(`code-${id}-${language}`, codeToSubmit);
+    }
+
     try {
-      if (!isInCollabSession) {
-        localStorage.setItem(`code-${id}-${language}`, code);
-      }
       const submissionResponse = await submitCode({
         problemId: id,
         language,
-        code,
+        code: codeToSubmit,
       });
       toast.success("Solution submitted! Waiting for verdict...");
       setCurrentSubmissionId(submissionResponse.submissionId);
@@ -660,23 +662,24 @@ const ProblemDetailPage = () => {
       setSubmissionResult(`Submission failed: ${err.message}`);
       setCurrentSubmissionId(null);
     }
-  }, [user, navigate, location, id, language, code, setSubmissionResult, isInCollabSession]);
-
+  }, [user, navigate, location, id, language, isInCollabSession]);
   const handleAiReview = useCallback(async () => {
     if (!user) {
-      toast.error("Please log in to submit solutions.");
+      toast.error("Please log in to get AI review.");
       navigate("/login", { state: { from: location } });
       return;
     }
-    if (!code.trim()) {
+    const codeToReview = editorRef.current?.getValue();
+    if (!codeToReview || !codeToReview.trim()) {
       toast.warning("Please write some code to review.");
       return;
     }
+
     setIsAiReviewing(true);
     setIsAiModalOpen(true);
-    setAiReviewContent("");
+    setAiReviewContent(""); 
     try {
-      const result = await getAIReview({ problemId: id, code });
+      const result = await getAIReview({ problemId: id, code: codeToReview });
       setAiReviewContent(result.review);
     } catch (err) {
       toast.error(err.message || "An error occurred during AI review.");
@@ -684,8 +687,11 @@ const ProblemDetailPage = () => {
     } finally {
       setIsAiReviewing(false);
     }
-  }, [user, navigate, location, id, code]);
+  }, [user, navigate, location, id]);
 
+  /**
+   * Initiates a new collaboration session by generating a unique session ID and navigating.
+   */
   const handleCollaboration = useCallback(() => {
     if (!user) {
       toast.error("Please log in to start a collaboration session.");
@@ -695,18 +701,22 @@ const ProblemDetailPage = () => {
     const newSessionId = uuidv4();
     navigate(`/problems/${id}/collab/${newSessionId}`);
   }, [user, navigate, location, id]);
-
   const handleLeaveCollaboration = useCallback(() => {
-    localStorage.setItem(`code-${id}-${language}`, code);
+    if (editorRef.current) {
+        localStorage.setItem(`code-${id}-${language}`, editorRef.current.getValue());
+    }
     navigate(`/problems/${id}`);
-  }, [navigate, id, language, code]);
-
+  }, [navigate, id, language]);
   const handleCopyLink = useCallback(() => {
     const joinLink = `${window.location.origin}/problems/${id}/collab/${sessionId}/join`;
-    navigator.clipboard.writeText(joinLink);
+    const tempInput = document.createElement('textarea');
+    tempInput.value = joinLink;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
     toast.success("Invite link copied to clipboard!");
   }, [id, sessionId]);
-
 
   if (isLoading) {
     return (
@@ -715,7 +725,6 @@ const ProblemDetailPage = () => {
       </div>
     );
   }
-
   if (error || !problem) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0f1e] text-center p-6">
@@ -737,12 +746,14 @@ const ProblemDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] to-[#111b30] text-white font-sans px-6 py-10 animate-fade-in-up">
+      {/* AI Review Modal */}
       <AIReviewModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         isLoading={isAiReviewing}
         reviewContent={aiReviewContent}
       />
+      {/* Conditional rendering for collaboration layout vs. single-user layout */}
       {isInCollabSession ? (
         <ResizablePanelGroup
           direction="horizontal"
@@ -796,19 +807,19 @@ const ProblemDetailPage = () => {
             code={code}
             onCodeChange={handleCodeChange}
             handleCursorChange={null}
-            cursors={null}
+            cursors={null} 
             submissionResult={submissionResult}
             isInCollabSession={isInCollabSession}
-            handleCopyLink={handleCopyLink}
-            handleLeaveCollaboration={null}
+            handleCopyLink={handleCopyLink} 
+            handleLeaveCollaboration={null} 
             handleAiReview={handleAiReview}
             isAiReviewing={isAiReviewing}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             sessionId={sessionId}
             handleCollaboration={handleCollaboration}
-            participants={null}
-            isConnected={false}
+            participants={null} 
+            isConnected={false} 
             onCodeEditorMount={handleCodeEditorMount}
           />
         </div>
