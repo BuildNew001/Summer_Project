@@ -66,6 +66,7 @@ const difficultyColorMap = {
   Medium: "bg-amber-500",
   Hard: "bg-rose-500",
 };
+
 const AIReviewModal = ({ isOpen, onClose, isLoading, reviewContent }) => {
   if (!isOpen) return null;
 
@@ -342,14 +343,15 @@ const ProblemDetailPage = () => {
   const { id, sessionId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();  
+  const { user } = useAuth();
   const { ydoc, awareness, connectionStatus } = useYjsCollab();
   const isConnected = connectionStatus === "connected";
+
   const [problem, setProblem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [language, setLanguage] = useState("cpp");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState("");  
   const [cursors, setCursors] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -365,7 +367,7 @@ const ProblemDetailPage = () => {
   const editorRef = useRef(null);
   const monacoBindingRef = useRef(null);
   const pollingIntervalRef = useRef(null);
-  const pollingTimeoutRef = useRef(null);  
+  const pollingTimeoutRef = useRef(null);
 
   const isInCollabSession = !!sessionId;
 
@@ -378,13 +380,14 @@ const ProblemDetailPage = () => {
       clearTimeout(pollingTimeoutRef.current);
       pollingTimeoutRef.current = null;
     }
-  }, []); 
+  }, []);
+
   const fetchFullSubmissionDetails = useCallback(async (submissionId) => {
     try {
       const submission = await fetchSubmissionById(submissionId);
       const { status, executionTime, memoryUsed, output } = submission;
 
-      setIsSubmitting(false);  
+      setIsSubmitting(false);
 
       let resultText = `Verdict: ${status}\n`;
       if (executionTime != null)
@@ -398,7 +401,7 @@ const ProblemDetailPage = () => {
       } else if (status === 'Compilation Error') {
         resultText += `\nCompilation Details:\n${output || 'No compilation output available.'}`;
         toast.error('Submission failed: Compilation Error');
-      } else { 
+      } else {
         resultText += `\nDetails:\n`;
         if (output) {
           try {
@@ -430,6 +433,7 @@ const ProblemDetailPage = () => {
     } finally {
     }
   }, [setIsSubmitting, setSubmissionResult, toast, fetchSubmissionById]);
+
   useEffect(() => {
     const getProblem = async () => {
       try {
@@ -445,24 +449,9 @@ const ProblemDetailPage = () => {
     };
     getProblem();
   }, [id]);
-
-  useEffect(() => {
-    if (!problem || isInCollabSession) return;
-
-    const savedCode = localStorage.getItem(`code-${id}-${language}`);
-    if (savedCode) {
-      setCode(savedCode);
-      return;
-    }
-
-    const defaultCode = problem.defaultCode?.[language];
-    setCode(
-      defaultCode && defaultCode.trim() ? defaultCode : boilerplate[language]
-    );
-  }, [id, language, problem, isInCollabSession]);
-
   useEffect(() => {
     if (!isInCollabSession || !ydoc || !awareness || !problem) return;
+
     const yText = ydoc.getText("codetext");
     const yChat = ydoc.getArray("chatMessages");
     const handleCodeUpdate = () => setCode(yText.toString());
@@ -479,51 +468,53 @@ const ProblemDetailPage = () => {
         }
       });
       setCursors(cursorsData);
+
       const host = states.find((s) => s.user?.isHost);
       setHostId(host?.user?.id || null);
     };
+
     yText.observe(handleCodeUpdate);
     yChat.observe(handleChatUpdate);
     awareness.on("change", handleAwarenessChange);
     handleChatUpdate();
     handleAwarenessChange();
+
     return () => {
       yText.unobserve(handleCodeUpdate);
       yChat.unobserve(handleChatUpdate);
       awareness.off("change", handleAwarenessChange);
     };
   }, [isInCollabSession, ydoc, awareness, problem, language]);
-    useEffect(() => {
-    let intervalId;
+  useEffect(() => {
     if (currentSubmissionId && !pollingIntervalRef.current) {
       if (pollingTimeoutRef.current) {
         clearTimeout(pollingTimeoutRef.current);
         pollingTimeoutRef.current = null;
       }
-      setSubmissionResult("Status: In Queue..."); 
+      setSubmissionResult("Status: In Queue...");
 
-      const POLLING_INTERVAL = 10000; 
-      const POLLING_TIMEOUT = 3 * 60 * 1000; 
+      const POLLING_INTERVAL = 10000;
+      const POLLING_TIMEOUT = 3 * 60 * 1000;
 
       pollingIntervalRef.current = setInterval(async () => {
-        console.log(`Polling for submission ${currentSubmissionId}...`); 
+        console.log(`Polling for submission ${currentSubmissionId}...`);
         try {
-            const submission = await fetchSubmissionById(currentSubmissionId);
-            if (submission.status !== 'In Queue' && submission.status !== 'Running' && submission.status !== 'Compiling' && submission.status !== 'Pending') {
-                stopPolling(); 
-                setCurrentSubmissionId(null);
-                setIsSubmitting(false); 
-                fetchFullSubmissionDetails(submission._id); 
-            } else {
-                setSubmissionResult(`Status: ${submission.status || 'In Queue'}...`);
-            }
-        } catch (err) {
-            console.error("Polling error for submission:", currentSubmissionId, err);
+          const submission = await fetchSubmissionById(currentSubmissionId);
+          if (submission.status !== 'In Queue' && submission.status !== 'Running' && submission.status !== 'Compiling' && submission.status !== 'Pending') {
             stopPolling();
             setCurrentSubmissionId(null);
             setIsSubmitting(false);
-            setSubmissionResult('Error fetching submission status.');
-            toast.error('Could not get submission result via polling.');
+            fetchFullSubmissionDetails(submission._id);
+          } else {
+            setSubmissionResult(`Status: ${submission.status || 'In Queue'}...`);
+          }
+        } catch (err) {
+          console.error("Polling error for submission:", currentSubmissionId, err);
+          stopPolling();
+          setCurrentSubmissionId(null);
+          setIsSubmitting(false);
+          setSubmissionResult('Error fetching submission status.');
+          toast.error('Could not get submission result via polling.');
         }
       }, POLLING_INTERVAL);
 
@@ -540,12 +531,13 @@ const ProblemDetailPage = () => {
         });
       }, POLLING_TIMEOUT);
     } else {
-        stopPolling();
+      stopPolling();
     }
     return () => {
-        stopPolling();
+      stopPolling();
     };
   }, [currentSubmissionId, fetchFullSubmissionDetails, stopPolling, setIsSubmitting, setSubmissionResult, toast]);
+
   const handleCursorChange = useCallback(
     (cursorPosition) => {
       if (awareness) {
@@ -563,24 +555,43 @@ const ProblemDetailPage = () => {
     },
     [isInCollabSession, id, language]
   );
+
   const handleCodeEditorMount = useCallback((editor) => {
     editorRef.current = editor;
     const model = editor.getModel();
-    if (isInCollabSession && ydoc && awareness && problem && model) {
+
+    if (!model) {
+      console.error("Monaco editor model not available on mount.");
+      return;
+    }
+
+    if (isInCollabSession && ydoc && awareness && problem) {
       if (monacoBindingRef.current) {
         monacoBindingRef.current.destroy();
+        monacoBindingRef.current = null;
       }
+
       const yText = ydoc.getText("codetext");
+
+      if (yText.length === 0) {
+        const currentLocalCode = localStorage.getItem(`code-${id}-${language}`) || "";
+        const initialContent = currentLocalCode.trim() ? currentLocalCode : (problem.defaultCode?.[language] || boilerplate[language]);
+        yText.insert(0, initialContent);
+      }
+
       monacoBindingRef.current = new MonacoBinding(
         yText,
         model,
         new Set([editor]),
         awareness
       );
-      if (yText.length === 0) {
-        yText.insert(0, problem.defaultCode?.[language] || boilerplate[language]);
-      }
-      model.setValue(yText.toString());
+      setCode(yText.toString());
+
+    } else if (!isInCollabSession) {
+      const savedCode = localStorage.getItem(`code-${id}-${language}`);
+      const initialCode = savedCode && savedCode.trim() ? savedCode : (problem.defaultCode?.[language] || boilerplate[language]);
+      model.setValue(initialCode);
+      setCode(initialCode);
     }
     return () => {
       if (monacoBindingRef.current) {
@@ -588,7 +599,20 @@ const ProblemDetailPage = () => {
         monacoBindingRef.current = null;
       }
     };
-  }, [isInCollabSession, ydoc, awareness, problem, language]);
+  }, [isInCollabSession, ydoc, awareness, problem, language, setCode, id, boilerplate]);
+
+  useEffect(() => {
+    if (isInCollabSession && ydoc && awareness && problem && !isSynced) {
+      const yText = ydoc.getText("codetext");
+      setCode(yText.toString());
+      setIsSynced(true);
+    }
+  }, [isInCollabSession, ydoc, awareness, problem, isSynced, setCode]);
+
+  useEffect(() => {
+    setIsSynced(false);
+  }, [sessionId]);
+
   const handleSendMessage = useCallback(
     (text) => {
       if (!text.trim() || !ydoc) return;
@@ -609,6 +633,7 @@ const ProblemDetailPage = () => {
     },
     [ydoc, user]
   );
+
   const handleSubmit = useCallback(async () => {
     if (!user) {
       toast.error("Please log in to submit solutions.");
@@ -616,24 +641,27 @@ const ProblemDetailPage = () => {
       return;
     }
     setIsSubmitting(true);
-    setCurrentSubmissionId(null); 
-    setSubmissionResult("Submitting your solution..."); 
+    setCurrentSubmissionId(null);
+    setSubmissionResult("Submitting your solution...");
     try {
-      localStorage.setItem(`code-${id}-${language}`, code);
+      if (!isInCollabSession) {
+        localStorage.setItem(`code-${id}-${language}`, code);
+      }
       const submissionResponse = await submitCode({
         problemId: id,
         language,
         code,
       });
       toast.success("Solution submitted! Waiting for verdict...");
-      setCurrentSubmissionId(submissionResponse.submissionId); 
+      setCurrentSubmissionId(submissionResponse.submissionId);
     } catch (err) {
       toast.error(err.message || "Failed to submit solution.");
       setIsSubmitting(false);
       setSubmissionResult(`Submission failed: ${err.message}`);
       setCurrentSubmissionId(null);
     }
-  }, [user, navigate, location, id, language, code, setSubmissionResult]);
+  }, [user, navigate, location, id, language, code, setSubmissionResult, isInCollabSession]);
+
   const handleAiReview = useCallback(async () => {
     if (!user) {
       toast.error("Please log in to submit solutions.");
@@ -657,6 +685,7 @@ const ProblemDetailPage = () => {
       setIsAiReviewing(false);
     }
   }, [user, navigate, location, id, code]);
+
   const handleCollaboration = useCallback(() => {
     if (!user) {
       toast.error("Please log in to start a collaboration session.");
@@ -666,10 +695,12 @@ const ProblemDetailPage = () => {
     const newSessionId = uuidv4();
     navigate(`/problems/${id}/collab/${newSessionId}`);
   }, [user, navigate, location, id]);
+
   const handleLeaveCollaboration = useCallback(() => {
     localStorage.setItem(`code-${id}-${language}`, code);
     navigate(`/problems/${id}`);
   }, [navigate, id, language, code]);
+
   const handleCopyLink = useCallback(() => {
     const joinLink = `${window.location.origin}/problems/${id}/collab/${sessionId}/join`;
     navigator.clipboard.writeText(joinLink);
@@ -764,21 +795,21 @@ const ProblemDetailPage = () => {
             setLanguage={setLanguage}
             code={code}
             onCodeChange={handleCodeChange}
-            handleCursorChange={null} 
+            handleCursorChange={null}
             cursors={null}
             submissionResult={submissionResult}
             isInCollabSession={isInCollabSession}
-            handleCopyLink={handleCopyLink} 
-            handleLeaveCollaboration={null} 
+            handleCopyLink={handleCopyLink}
+            handleLeaveCollaboration={null}
             handleAiReview={handleAiReview}
             isAiReviewing={isAiReviewing}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
-            sessionId={sessionId} 
-            handleCollaboration={handleCollaboration} 
-            participants={null} 
-            isConnected={false} 
-            onCodeEditorMount={null} 
+            sessionId={sessionId}
+            handleCollaboration={handleCollaboration}
+            participants={null}
+            isConnected={false}
+            onCodeEditorMount={handleCodeEditorMount}
           />
         </div>
       )}
