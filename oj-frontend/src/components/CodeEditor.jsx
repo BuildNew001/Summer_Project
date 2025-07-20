@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { runCode } from '../context/problemfetch';
 import { Loader2, PlayCircle, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation }from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -21,24 +22,14 @@ const languageMap = {
   py: 'python',
 };
 
-const CodeEditor = ({
-  code,
-  onCodeChange,
-  language,
-  onLanguageChange,
-  submissionResult,
-  readOnly = false,
-  onMount, // This prop can be handleCodeEditorMount or null from ProblemDetailPage
-  height = 'calc(100vh - 120px)',
-  isInCollabSession // Ensure this is destructured
-}) => {
+const CodeEditor = ({ code, onCodeChange, language, onLanguageChange, problemId, submissionResult, readOnly = false, height = 'calc(100vh - 120px)' }) => {
   const [output, setOutput] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const [customInput, setCustomInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState('input');
-  const { user } = useAuth(); // Assuming this is used for runCode auth
+  const { user } = useAuth();
 
   useEffect(() => {
     if (submissionResult) {
@@ -63,30 +54,40 @@ const CodeEditor = ({
     setActiveTab('output');
 
     try {
-      const currentCode = code;
-      const data = await runCode(language, currentCode, customInput);
+      const data = await runCode(language, code, customInput);
       setOutput(data.output);
       toast.success('Code ran successfully!');
     } catch (error) {
-      let outputMessage = error?.error || error?.stderr || error?.message || 'An unknown error occurred.';
+      let outputMessage = 'An unknown error occurred.';
+      let toastMessage = 'Execution Failed';
+
+      const fullErrorString = error?.error || error?.stderr;
+      if (typeof fullErrorString === 'string') {
+        const parts = fullErrorString.split(': error: ');
+        if (parts.length > 1) {
+          const errorType = parts[0].split(':')[0].trim();
+          const errorDetails = `error: ${parts.slice(1).join(': error: ')}`;
+          outputMessage = `${errorType}:\n\n${errorDetails}`;
+          toastMessage = errorType;
+        } else {
+          outputMessage = fullErrorString;
+        }
+      } else {
+        outputMessage = error?.message || JSON.stringify(error);
+        toastMessage = error?.message || 'Execution Failed';
+      }
+
       setOutput(outputMessage);
-      toast.error('Execution Failed');
+      toast.error(toastMessage);
     } finally {
       setIsRunning(false);
     }
   };
 
-  // --- CRITICAL FIX for onMount prop ---
-  // Ensure onMount passed to MonacoEditor is always a function, never null.
-  // If the prop `onMount` from parent is null, use a no-op function instead.
-  const monacoEditorOnMount = typeof onMount === 'function' ? onMount : () => {}; // <--- EXACT CHANGE HERE
-
   return (
     <div style={{ height }} className="flex flex-col w-full rounded-2xl border border-[#2f3542] bg-gradient-to-br from-[#0e111a] to-[#1a1f2e] shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
-      {/* Editor Controls */}
       {!readOnly && (
         <div className="flex justify-between items-center px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
-          {/* Language Selector */}
           <div className="flex items-center gap-3">
             <Code className="text-[#00ffa3] w-5 h-5" />
             <Select value={language} onValueChange={onLanguageChange}>
@@ -101,34 +102,57 @@ const CodeEditor = ({
               </SelectContent>
             </Select>
           </div>
-          {/* Run Code Button */}
-          <Button onClick={handleRunCode} disabled={isRunning} className="h-8 px-4 text-sm bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] hover:from-[#00ffa3] hover:to-[#00d4ff] text-black font-semibold">
+
+          <Button
+            onClick={handleRunCode}
+            disabled={isRunning}
+            className="h-8 px-4 text-sm bg-gradient-to-r from-[#00d4ff] to-[#00ffa3] hover:from-[#00ffa3] hover:to-[#00d4ff] text-black font-semibold transition-all duration-200 ease-in-out flex items-center gap-2 rounded-xl shadow-md hover:shadow-lg"
+          >
             {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4" />}
-            <span className="ml-2">{isRunning ? 'Running...' : 'Run Code'}</span>
+            {isRunning ? 'Running...' : 'Run Code'}
           </Button>
         </div>
       )}
-      {/* Editor and IO Panel */}
+
       <div className="flex flex-row flex-grow overflow-hidden">
         <div className={readOnly ? "w-full h-full" : "w-3/5 h-full"}>
           <MonacoEditor
             height="100%"
             language={languageMap[language] || 'plaintext'}
-            {...(!isInCollabSession && { value: code, onChange: onCodeChange })}
-            onMount={monacoEditorOnMount} // <--- USE THE NEW LOCAL VARIABLE HERE
+            value={code}
+            onChange={(value) => onCodeChange(value)}
             theme="vs-dark"
-            options={{ readOnly, fontSize: 15 }}
+            options={{
+              readOnly: readOnly,
+              fontSize: 15,
+              fontFamily: 'Fira Code, monospace',
+              fontLigatures: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              tabSize: 4,
+              automaticLayout: true,
+              padding: { top: 12, bottom: 12 },
+              lineNumbers: 'on',
+              roundedSelection: false,
+              cursorSmoothCaretAnimation: true,
+              scrollbar: {
+                verticalScrollbarSize: 6,
+                horizontalScrollbarSize: 6,
+              },
+            }}
           />
         </div>
+
         {!readOnly && (
-           <div className="w-2/5 h-full flex flex-col border-l border-[#30363d]">
+          <div className="w-2/5 h-full flex flex-col border-l border-[#30363d]">
             <div className="flex-shrink-0 flex bg-[#0f1117] text-sm text-white border-b border-[#30363d]">
               {['input', 'output'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2 transition-all duration-200 border-b-2 font-semibold uppercase tracking-wide text-xs ${
-                    activeTab === tab ? 'border-[#00ffa3]' : 'border-transparent text-slate-400 hover:text-white'
+                    activeTab === tab ? 'border-[#00ffa3] text-[#00ffa3]' : 'border-transparent text-slate-400 hover:text-white'
                   }`}
                 >
                   {tab}
@@ -148,6 +172,7 @@ const CodeEditor = ({
                   />
                 </div>
               )}
+
               {activeTab === 'output' && (
                 <div className="p-4">
                   <div className="text-sm font-bold text-[#00ffa3] mb-2">OUTPUT</div>
