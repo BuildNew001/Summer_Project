@@ -5,11 +5,10 @@ Codeblaze is a fully developed online judge platform designed to offer a compreh
 My goal with Codeblaze was to create a seamless and intuitive experience from start to finish: from effortlessly solving problems and receiving instant, detailed feedback, to tracking personal progress and gaining unique AI-powered insights into your code.
 
 
-## :link: Live Platform & Demo
+## link: Demo Video
 
 Experience Codeblaze firsthand:
 
-* **Live Platform:** [https://www.algocodeblaze.space/](https://www.algocodeblaze.space/)
 * **Demo Video:** [https://www.loom.com/share/6f9fe2668650414691457ef716724909?sid=1589610c-73e4-4309-98e8-62e4b8ba6761](https://www.loom.com/share/6f9fe2668650414691457ef716724909?sid=1589610c-73e4-4309-98e8-62e4b8ba6761)
 
 ---
